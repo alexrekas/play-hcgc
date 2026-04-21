@@ -71,6 +71,8 @@ export const CLUBS: Club[] = [
     avgYards: { male: 115, female: 90,  other: 105 } },
   { id: "gw",       name: "Gap Wedge (AW)", shortName: "GW", category: "wedge",
     avgYards: { male: 100, female: 80,  other: 90  } },
+  { id: "sw",       name: "Sand Wedge",  shortName: "SW",  category: "wedge",
+    avgYards: { male: 85,  female: 70,  other: 78  } },
   { id: "wedge48",  name: "48° Wedge",   shortName: "48°", category: "wedge",
     avgYards: { male: 110, female: 88,  other: 100 } },
   { id: "wedge50",  name: "50° Wedge",   shortName: "50°", category: "wedge",
@@ -87,8 +89,6 @@ export const CLUBS: Club[] = [
     avgYards: { male: 70,  female: 55,  other: 65  } },
   { id: "wedge62",  name: "62° Wedge",   shortName: "62°", category: "wedge",
     avgYards: { male: 62,  female: 48,  other: 58  } },
-  { id: "sw",       name: "Sand Wedge",  shortName: "SW",  category: "wedge",
-    avgYards: { male: 85,  female: 70,  other: 78  } },
 
   // ── Putter ────────────────────────────────────────────────────────────────
   { id: "putter",   name: "Putter",      shortName: "Pt",  category: "putter",

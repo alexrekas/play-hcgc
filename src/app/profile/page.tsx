@@ -16,7 +16,7 @@ import {
 import { getUserRounds, getHandicapRecord } from "@/lib/firestore";
 import { COURSE, TEE_LABELS, type TeeName } from "@/data/course";
 import { courseHandicap } from "@/lib/handicap";
-import type { HandicapRecord, Round } from "@/types";
+import type { HandicapRecord, Round, Dexterity } from "@/types";
 import { clubStatsFromRounds, buildClubAverages } from "@/lib/clubStats";
 import { ACHIEVEMENTS, computeEarnedAchievements, type Achievement } from "@/lib/achievements";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -39,6 +39,7 @@ export default function ProfilePage() {
 
   const [displayName, setDisplayName] = useState("");
   const [gender,      setGender]      = useState<Gender>("male");
+  const [dexterity,   setDexterity]   = useState<Dexterity>("right");
   const [bag,         setBag]         = useState<string[]>(DEFAULT_BAG);
   const [averages,    setAverages]    = useState<Record<string, number>>({});
   const [saving,      setSaving]      = useState(false);
@@ -58,6 +59,7 @@ export default function ProfilePage() {
     if (!profile) return;
     setDisplayName(profile.displayName);
     setGender(profile.gender);
+    setDexterity(profile.dexterity ?? "right");
     setBag(profile.bag ?? DEFAULT_BAG);
     setAverages(profile.clubAverages ?? {});
   }, [profile]);
@@ -171,6 +173,7 @@ export default function ProfilePage() {
         ...profile,
         displayName: displayName.trim() || profile.displayName,
         gender,
+        dexterity,
         bag: bag.length > 0 ? bag : DEFAULT_BAG,
         clubAverages: averages,
       });
@@ -247,6 +250,22 @@ export default function ProfilePage() {
                   }`}
                 >
                   {g}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className="block text-subtle text-xs mb-2">Dexterity (mirrors shot-shape visuals)</label>
+            <div className="flex gap-2">
+              {(["right", "left"] as Dexterity[]).map((d) => (
+                <button
+                  key={d}
+                  onClick={() => { setDexterity(d); setSavedAt(null); }}
+                  className={`flex-1 px-3 py-2 rounded-lg text-sm font-semibold capitalize transition-colors ${
+                    dexterity === d ? "bg-green-600 text-white" : "bg-accent text-muted border border-app"
+                  }`}
+                >
+                  {d}-handed
                 </button>
               ))}
             </div>

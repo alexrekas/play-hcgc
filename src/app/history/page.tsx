@@ -49,6 +49,34 @@ export default function HistoryPage() {
     );
   }
 
+  // No rounds yet — show a friendly empty state instead of an empty handicap card.
+  if (rounds.length === 0) {
+    return (
+      <main className="min-h-screen bg-app text-app">
+        <div className="bg-card border-b border-app px-4 py-4 flex items-center justify-between gap-3">
+          <button onClick={() => router.push("/")} className="text-primary text-sm font-semibold">← Home</button>
+          <h1 className="font-bold text-lg">My Rounds &amp; Handicap</h1>
+          <ThemeToggle />
+        </div>
+        <div className="max-w-lg mx-auto px-4 mt-16 text-center space-y-6">
+          <div className="text-6xl">⛳</div>
+          <div className="space-y-2">
+            <h2 className="text-xl font-bold">No rounds yet</h2>
+            <p className="text-muted">
+              Play your first round to start tracking your scores, differentials, and handicap index.
+            </p>
+          </div>
+          <button
+            onClick={() => router.push("/setup")}
+            className="w-full max-w-xs py-3 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold transition-colors"
+          >
+            Start a Round
+          </button>
+        </div>
+      </main>
+    );
+  }
+
   const index = hcpRecord?.handicapIndex;
   const teeInfo = COURSE.teeInfo[teeForCH];
   const chp = index !== null && index !== undefined

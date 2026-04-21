@@ -3,12 +3,13 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { getFirebaseDb } from "./firebase";
 import { useAuth } from "./authContext";
-import type { UserProfile } from "@/types";
+import type { UserProfile, Dexterity } from "@/types";
 import { DEFAULT_BAG, type Gender } from "@/data/clubs";
 
 interface Ctx {
   profile: UserProfile | null;
   gender: Gender;              // defaults to "male" for guests
+  dexterity: Dexterity;        // defaults to "right" for guests
   bag: string[];               // club IDs — falls back to DEFAULT_BAG for guests
   clubAverages: Record<string, number>;
   setProfile: (p: UserProfile) => Promise<void>;
@@ -18,6 +19,7 @@ interface Ctx {
 const ProfileContext = createContext<Ctx>({
   profile: null,
   gender: "male",
+  dexterity: "right",
   bag: DEFAULT_BAG,
   clubAverages: {},
   setProfile: async () => {},
@@ -44,12 +46,15 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
           email:       data.email       ?? user.email ?? "",
           displayName: data.displayName ?? "Player",
           gender:      data.gender      ?? "male",
+          dexterity:   data.dexterity   ?? "right",
           bag:         Array.isArray(data.bag) && data.bag.length > 0 ? data.bag : DEFAULT_BAG,
           createdAt:   data.createdAt   ?? new Date().toISOString(),
         };
         setProfileState(loaded);
-        // Persist the backfill silently if bag was missing.
-        if (!Array.isArray(data.bag) || data.bag.length === 0) {
+        // Persist the backfill silently if bag or dexterity was missing.
+        const needsBackfill =
+          !Array.isArray(data.bag) || data.bag.length === 0 || !data.dexterity;
+        if (needsBackfill) {
           setDoc(doc(getFirebaseDb(), "users", user.uid), loaded).catch(() => {});
         }
       } else {
@@ -59,6 +64,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
           email:       user.email ?? "",
           displayName: user.displayName ?? (user.email?.split("@")[0] ?? "Player"),
           gender:      "male",
+          dexterity:   "right",
           bag:         DEFAULT_BAG,
           createdAt:   new Date().toISOString(),
         };
@@ -74,11 +80,12 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   }
 
   const gender = profile?.gender ?? guestGender;
+  const dexterity: Dexterity = profile?.dexterity ?? "right";
   const bag = profile?.bag ?? DEFAULT_BAG;
   const clubAverages = profile?.clubAverages ?? {};
 
   return (
-    <ProfileContext.Provider value={{ profile, gender, bag, clubAverages, setProfile, setGender: setGuestGender }}>
+    <ProfileContext.Provider value={{ profile, gender, dexterity, bag, clubAverages, setProfile, setGender: setGuestGender }}>
       {children}
     </ProfileContext.Provider>
   );

@@ -1,6 +1,8 @@
 import type { TeeName } from "@/data/course";
 import type { Gender } from "@/data/clubs";
 
+export type Dexterity = "right" | "left";
+
 export type LieType =
   | "tee"
   | "fairway"
@@ -70,6 +72,7 @@ export interface UserProfile {
   email: string;
   displayName: string;
   gender: Gender;
+  dexterity: Dexterity;       // right- or left-handed — mirrors shot-shape visuals
   bag: string[];              // club IDs the user carries
   /** Per-club average-distance overrides (yards). Falls back to clubs.ts defaults. */
   clubAverages?: Record<string, number>;

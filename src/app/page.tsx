@@ -55,6 +55,7 @@ export default function LandingPage() {
           email,
           displayName,
           gender,
+          dexterity: "right",
           bag: DEFAULT_BAG,
           createdAt: new Date().toISOString(),
         };
@@ -132,12 +133,14 @@ export default function LandingPage() {
               >
                 Start a Round
               </button>
-              <button
-                onClick={() => router.push("/history")}
-                className="w-full py-3 rounded-xl bg-accent hover:opacity-90 text-app font-semibold transition-all"
-              >
-                My Rounds &amp; Handicap
-              </button>
+              {hcpRecord && hcpRecord.rounds && hcpRecord.rounds.length > 0 && (
+                <button
+                  onClick={() => router.push("/history")}
+                  className="w-full py-3 rounded-xl bg-accent hover:opacity-90 text-app font-semibold transition-all"
+                >
+                  My Rounds &amp; Handicap
+                </button>
+              )}
               <button
                 onClick={() => router.push("/profile")}
                 className="w-full py-3 rounded-xl bg-accent hover:opacity-90 text-app font-semibold transition-all"

@@ -10,35 +10,48 @@ interface Props {
   shape: ShotShape;
   size?: number;
   className?: string;
+  /** Mirror the flight path horizontally — set true for left-handed players so
+   * "pull" visually goes right, "push" goes left, etc. */
+  mirror?: boolean;
 }
 
-// tee x, target x, and curvature sign — all normalized 0..1
+// tee x, target x, and curvature — all normalized 0..1 within the SVG.
+// Values describe what a RIGHT-handed golfer sees from behind the ball:
+//   • "pull" shots end on the RIGHT side of the canvas
+//   • "push" shots end on the LEFT side
+//   • positive curve = bulge right; negative = bulge left
+// Left-handed players pass mirror=true, which reflects target and curve
+// around the centerline.
 const GEOM: Record<ShotShape, { tx: number; target: number; curve: number }> = {
-  "pull-hook":  { tx: 0.5, target: 0.15, curve: -0.35 },
-  "pull":       { tx: 0.5, target: 0.25, curve:  0    },
-  "pull-slice": { tx: 0.5, target: 0.35, curve:  0.30 },
-  "draw":       { tx: 0.5, target: 0.30, curve: -0.20 },
+  "pull-hook":  { tx: 0.5, target: 0.85, curve:  0.35 },
+  "pull":       { tx: 0.5, target: 0.75, curve:  0    },
+  "pull-slice": { tx: 0.5, target: 0.65, curve: -0.30 },
+  "draw":       { tx: 0.5, target: 0.70, curve:  0.20 },
   "straight":   { tx: 0.5, target: 0.50, curve:  0    },
-  "fade":       { tx: 0.5, target: 0.70, curve:  0.20 },
-  "push-draw":  { tx: 0.5, target: 0.65, curve: -0.30 },
-  "push":       { tx: 0.5, target: 0.75, curve:  0    },
-  "push-slice": { tx: 0.5, target: 0.85, curve:  0.35 },
+  "fade":       { tx: 0.5, target: 0.30, curve: -0.20 },
+  "push-draw":  { tx: 0.5, target: 0.35, curve:  0.30 },
+  "push":       { tx: 0.5, target: 0.25, curve:  0    },
+  "push-slice": { tx: 0.5, target: 0.15, curve: -0.35 },
 };
 
-export default function ShotShapeIcon({ shape, size = 36, className = "" }: Props) {
+export default function ShotShapeIcon({ shape, size = 36, className = "", mirror = false }: Props) {
   const g = GEOM[shape];
   const W = 48, H = 64;
 
+  // Mirror horizontally around the centerline when rendering for a LH player.
+  const targetNorm = mirror ? 1 - g.target : g.target;
+  const curveSign  = mirror ? -g.curve : g.curve;
+
   const teeX = g.tx * W;
   const teeY = H - 6;
-  const targetX = g.target * W;
+  const targetX = targetNorm * W;
   const targetY = 10;
 
   // Control point sits at the midpoint of the straight line, pushed sideways
   // by `curve`. Positive curve = bulge right; negative = bulge left.
   const midX = (teeX + targetX) / 2;
   const midY = (teeY + targetY) / 2;
-  const cpX = midX + g.curve * W;
+  const cpX = midX + curveSign * W;
   const cpY = midY;
 
   const path = `M ${teeX} ${teeY} Q ${cpX} ${cpY} ${targetX} ${targetY}`;
