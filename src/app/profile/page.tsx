@@ -43,6 +43,7 @@ export default function ProfilePage() {
   const [averages,    setAverages]    = useState<Record<string, number>>({});
   const [saving,      setSaving]      = useState(false);
   const [savedAt,     setSavedAt]     = useState<number | null>(null);
+  const [saveError,   setSaveError]   = useState<string | null>(null);
 
   const [rounds,      setRounds]      = useState<Round[]>([]);
   const [hcpRecord,   setHcpRecord]   = useState<HandicapRecord | null>(null);
@@ -164,6 +165,7 @@ export default function ProfilePage() {
   async function save() {
     if (!profile) return;
     setSaving(true);
+    setSaveError(null);
     try {
       await setProfile({
         ...profile,
@@ -173,6 +175,10 @@ export default function ProfilePage() {
         clubAverages: averages,
       });
       setSavedAt(Date.now());
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Save failed";
+      console.error("Profile save failed:", e);
+      setSaveError(msg);
     } finally {
       setSaving(false);
     }
@@ -494,10 +500,15 @@ export default function ProfilePage() {
             >
               {saving ? "Saving…" : "Save Profile"}
             </button>
-            {savedAt && !saving && (
+            {savedAt && !saving && !saveError && (
               <span className="text-primary text-xs font-semibold">Saved ✓</span>
             )}
           </div>
+          {saveError && (
+            <p className="text-danger text-xs mt-2 text-center">
+              Couldn&apos;t save: {saveError}
+            </p>
+          )}
         </div>
       </div>
     </main>
