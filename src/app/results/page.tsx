@@ -17,6 +17,7 @@ export default function ResultsPage() {
   const { round, resetGame } = useGameStore();
   const [saved,     setSaved]     = useState(false);
   const [saving,    setSaving]    = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [hcpRecord, setHcpRecord] = useState<HandicapRecord | null>(null);
   const [expandedHole, setExpandedHole] = useState<number | null>(null);
 
@@ -51,11 +52,21 @@ export default function ResultsPage() {
   async function handleSave() {
     if (!user || saved || !round) return;
     setSaving(true);
+    setSaveError(null);
     try {
-      await saveRound({ ...round, differential: diff } as import("@/types").Round);
+      // Force the currently-signed-in user's uid onto the round. Covers the
+      // case where the round was started while signed out (userId === null).
+      const payload: import("@/types").Round = {
+        ...round,
+        userId: user.uid,
+        differential: diff,
+      };
+      await saveRound(payload);
       setSaved(true);
-    } catch (e) {
-      console.error(e);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Save failed";
+      console.error("Save round failed:", e);
+      setSaveError(msg);
     } finally {
       setSaving(false);
     }
@@ -223,6 +234,11 @@ export default function ResultsPage() {
             >
               {saving ? "Saving…" : "Save Round to My Profile"}
             </button>
+          )}
+          {saveError && (
+            <p className="text-center text-danger text-sm">
+              Couldn&apos;t save: {saveError}
+            </p>
           )}
           {saved && (
             <p className="text-center text-primary font-semibold">Round saved!</p>

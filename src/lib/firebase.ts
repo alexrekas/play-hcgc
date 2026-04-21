@@ -1,6 +1,6 @@
 import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { initializeFirestore, getFirestore, type Firestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey:            process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -12,6 +12,7 @@ const firebaseConfig = {
 };
 
 let _app: FirebaseApp | undefined;
+let _db:  Firestore  | undefined;
 
 function app(): FirebaseApp {
   if (_app) return _app;
@@ -21,4 +22,21 @@ function app(): FirebaseApp {
 
 // Lazily resolved — safe to import on server; init happens only in browser
 export const getFirebaseAuth = () => getAuth(app());
-export const getFirebaseDb   = () => getFirestore(app());
+
+/**
+ * Firestore with `ignoreUndefinedProperties: true` so that optional fields on
+ * Round / Shot / UserProfile (e.g. shotShape, holedOut, differential,
+ * totalStrokesGained) don't blow up setDoc when undefined.
+ * initializeFirestore must be called once before any getFirestore() call.
+ */
+export function getFirebaseDb(): Firestore {
+  if (_db) return _db;
+  const a = app();
+  try {
+    _db = initializeFirestore(a, { ignoreUndefinedProperties: true });
+  } catch {
+    // Already initialized elsewhere (e.g. HMR) — fall back to the existing instance.
+    _db = getFirestore(a);
+  }
+  return _db;
+}

@@ -6,6 +6,11 @@ import { strokesGained } from "./strokesGained";
 // Instead the UI asks the player what lie they ended up in, and we pass that in.
 // We still compute an approximate canvas position so the diagram can draw the shot.
 
+/**
+ * Project a shot's new position on the canvas. Returns both:
+ *   • canvas coords (clamped to the visible area, for drawing)
+ *   • raw y-coord (unclamped, for computing actual distance to pin)
+ */
 export function computeNewPosition(
   prevX: number,
   prevY: number,
@@ -13,22 +18,25 @@ export function computeNewPosition(
   distanceYards: number,
   holeLengthYards: number,
   canvasAspect: number
-): { x: number; y: number } {
+): { x: number; y: number; rawY: number } {
   const yFraction = distanceYards / holeLengthYards;
   const angleRad  = (aimAngleDeg * Math.PI) / 180;
   const dx = yFraction * Math.sin(angleRad);
   const dy = yFraction * Math.cos(angleRad);
+  const rawY = prevY + dy;
   return {
     x: Math.max(0, Math.min(1, prevX + dx / canvasAspect)),
-    y: Math.max(0, Math.min(1.05, prevY + dy)),
+    y: Math.max(0, Math.min(1.05, rawY)),
+    rawY,
   };
 }
 
+/** Distance from position y to the pin (at y=1), absolute — handles past-the-green shots. */
 export function remainingYards(
   posY: number,
   holeLengthYards: number
 ): number {
-  return Math.max(0, Math.round(holeLengthYards * (1 - posY)));
+  return Math.round(Math.abs(holeLengthYards * (1 - posY)));
 }
 
 export interface BuildShotInput {
@@ -62,15 +70,17 @@ export function buildShotResult(input: BuildShotInput): ShotResult {
     remainingOverride,
   } = input;
 
-  const { x, y } = computeNewPosition(
+  const { x, y, rawY } = computeNewPosition(
     prevX, prevY, aimAngleDeg, distanceYards, holeLengthYards, canvasAspect
   );
 
   // If the shot holed out we force the lie to "green" regardless of input.
   const resultLie: LieType = holeOut ? "green" : inputLie;
+  // Use rawY (unclamped) so past-the-green shots still produce a positive
+  // remaining distance rather than collapsing to zero.
   const remaining = holeOut
     ? 0
-    : (remainingOverride !== undefined ? Math.max(0, Math.round(remainingOverride)) : remainingYards(y, holeLengthYards));
+    : (remainingOverride !== undefined ? Math.max(0, Math.round(remainingOverride)) : remainingYards(rawY, holeLengthYards));
 
   const sg = strokesGained(prevLie, prevRemaining, resultLie, remaining, holeOut, holePar);
 

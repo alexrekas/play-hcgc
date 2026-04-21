@@ -118,8 +118,13 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
   }
 
   const yardage        = hole.tees[round.tee];
-  const remainingYards = Math.max(0, Math.round(yardage * (1 - currentPos.y)));
+  // Trust the stored remaining on the last shot (computed from the unclamped
+  // projection in shotEngine). Fall back to full yardage on the tee.
+  const remainingYards = lastShot
+    ? lastShot.remainingYards
+    : yardage;
   const onGreen        = currentLie === "green";
+  // Used only for UI copy ("Holed out!" vs "You're on the green")
   const onHole         = remainingYards === 0;
 
   // Default club suggestion restricted to the user's bag
@@ -128,7 +133,10 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
   const selectedClub   = getClubById(selectedClubId) ?? suggestedClub;
 
   const holeDone = holeScore?.completed === true;
-  const readyForPutts = onHole || (onGreen && !holeDone);
+  // Only prompt for putts when the player explicitly picked "green" as the
+  // result lie. If they flew the green, currentLie is whatever lie they chose
+  // (rough / rough / ob / etc.), so they'll hit another approach shot instead.
+  const readyForPutts = onGreen && !holeDone;
 
   const completedHoles = round.holes.filter((h) => h.completed);
   const runningTotal   = completedHoles.reduce((s, h) => s + h.strokes, 0);
