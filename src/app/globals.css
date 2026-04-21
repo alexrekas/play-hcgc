@@ -1,26 +1,59 @@
 @import "tailwindcss";
 
+/* Tailwind v4: enable class-based dark mode */
+@variant dark (&:where(.dark, .dark *));
+
+/* Light (default) theme palette */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg:           #f8fafc;
+  --bg-elevated: #ffffff;
+  --bg-accent:   #f1f5f9;
+  --text:        #0f172a;
+  --text-muted:  #475569;
+  --text-subtle: #64748b;
+  --border:      #e2e8f0;
+  --primary:     #15803d;
+  --primary-hover:#166534;
+  --accent:      #16a34a;
+  --success:     #16a34a;
+  --danger:      #dc2626;
+  --warning:     #d97706;
+
+  --fairway: #3a7d44;
+  --rough:   #2d6235;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+.dark {
+  --bg:          #052e16;
+  --bg-elevated: #064e3b;
+  --bg-accent:   #14532d;
+  --text:        #ecfdf5;
+  --text-muted:  #a7f3d0;
+  --text-subtle: #86efac;
+  --border:      #166534;
+  --primary:     #22c55e;
+  --primary-hover:#16a34a;
+  --accent:      #4ade80;
+  --success:     #4ade80;
+  --danger:      #f87171;
+  --warning:     #fbbf24;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+* { box-sizing: border-box; }
+body { overscroll-behavior: none; background: var(--bg); color: var(--text); }
+.aim-canvas { cursor: crosshair; }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-}
+/* Utility classes bound to CSS vars (for use alongside Tailwind) */
+.bg-app        { background: var(--bg); }
+.bg-card       { background: var(--bg-elevated); }
+.bg-accent     { background: var(--bg-accent); }
+.text-app      { color: var(--text); }
+.text-muted    { color: var(--text-muted); }
+.text-subtle   { color: var(--text-subtle); }
+.border-app    { border-color: var(--border); }
+.text-danger   { color: var(--danger); }
+.text-success  { color: var(--success); }
+.text-warning  { color: var(--warning); }
+.text-primary  { color: var(--primary); }
+.bg-primary    { background: var(--primary); }
+.bg-primary-hover:hover { background: var(--primary-hover); }

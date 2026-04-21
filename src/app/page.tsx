@@ -1,65 +1,251 @@
-import Image from "next/image";
+"use client";
+export const dynamic = "force-dynamic";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  updateProfile,
+} from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
+import { getFirebaseAuth, getFirebaseDb } from "@/lib/firebase";
+import { useAuth } from "@/lib/authContext";
+import { useProfile } from "@/lib/profileContext";
+import ThemeToggle from "@/components/ThemeToggle";
+import { DEFAULT_BAG, type Gender } from "@/data/clubs";
+import type { UserProfile } from "@/types";
 
-export default function Home() {
+type Mode = "signin" | "signup";
+
+export default function LandingPage() {
+  const router = useRouter();
+  const { user, loading } = useAuth();
+  const { profile, setGender } = useProfile();
+
+  const [mode,      setMode]     = useState<Mode>("signin");
+  const [email,     setEmail]    = useState("");
+  const [password,  setPassword] = useState("");
+  const [name,      setName]     = useState("");
+  const [gender,    setGenderField] = useState<Gender>("male");
+  const [err,       setErr]      = useState<string | null>(null);
+  const [busy,      setBusy]     = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setErr(null);
+    setBusy(true);
+    try {
+      const auth = getFirebaseAuth();
+      if (mode === "signup") {
+        const cred = await createUserWithEmailAndPassword(auth, email, password);
+        const displayName = name.trim() || email.split("@")[0];
+        await updateProfile(cred.user, { displayName });
+        const userProfile: UserProfile = {
+          uid: cred.user.uid,
+          email,
+          displayName,
+          gender,
+          bag: DEFAULT_BAG,
+          createdAt: new Date().toISOString(),
+        };
+        await setDoc(doc(getFirebaseDb(), "users", cred.user.uid), userProfile);
+      } else {
+        await signInWithEmailAndPassword(auth, email, password);
+      }
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Authentication failed";
+      setErr(msg.replace(/^Firebase:\s*/, "").replace(/\s*\(auth\/[^)]+\)\.?$/, ""));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-app">
+        <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <main className="min-h-screen bg-app flex flex-col">
+      <header className="px-4 py-3 flex justify-end">
+        <ThemeToggle />
+      </header>
+
+      <div className="flex-1 flex flex-col items-center justify-center px-4 pb-12">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center gap-3 mb-3">
+            <span className="text-5xl">⛳</span>
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight text-app">Play HCGC</h1>
+              <p className="text-subtle text-sm">Herndon Centennial Golf Course</p>
+            </div>
+          </div>
+          <p className="text-muted mt-4 max-w-sm mx-auto leading-relaxed">
+            Simulate a full 18-hole round at Herndon Centennial from anywhere.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div className="w-full max-w-sm space-y-4">
+          {user ? (
+            <>
+              <div className="bg-card border border-app rounded-xl p-4 text-center">
+                <p className="text-subtle text-sm">Signed in as</p>
+                <p className="font-semibold text-app">{profile?.displayName ?? user.displayName ?? user.email}</p>
+                {profile && (
+                  <p className="text-subtle text-xs mt-0.5 capitalize">{profile.gender}</p>
+                )}
+              </div>
+              <button
+                onClick={() => router.push("/setup")}
+                className="w-full py-3 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold text-lg transition-colors"
+              >
+                Start a Round
+              </button>
+              <button
+                onClick={() => router.push("/history")}
+                className="w-full py-3 rounded-xl bg-accent hover:opacity-90 text-app font-semibold transition-all"
+              >
+                My Rounds &amp; Handicap
+              </button>
+              <button
+                onClick={() => router.push("/profile")}
+                className="w-full py-3 rounded-xl bg-accent hover:opacity-90 text-app font-semibold transition-all"
+              >
+                Profile &amp; My Bag
+              </button>
+              <button
+                onClick={() => signOut(getFirebaseAuth())}
+                className="w-full py-2 text-subtle hover:text-app text-sm transition-colors"
+              >
+                Sign out
+              </button>
+            </>
+          ) : (
+            <>
+              <div className="flex bg-accent rounded-xl p-1">
+                <button
+                  onClick={() => { setMode("signin"); setErr(null); }}
+                  className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                    mode === "signin" ? "bg-green-600 text-white" : "text-subtle"
+                  }`}
+                >
+                  Sign In
+                </button>
+                <button
+                  onClick={() => { setMode("signup"); setErr(null); }}
+                  className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                    mode === "signup" ? "bg-green-600 text-white" : "text-subtle"
+                  }`}
+                >
+                  Create Account
+                </button>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-3">
+                {mode === "signup" && (
+                  <>
+                    <input
+                      type="text"
+                      placeholder="Display Name (optional)"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="w-full bg-card border border-app rounded-xl px-4 py-3 text-app placeholder:text-subtle focus:outline-none focus:border-green-500"
+                    />
+                    <div>
+                      <label className="text-subtle text-xs uppercase tracking-wider block mb-2">
+                        Gender (for club yardage defaults)
+                      </label>
+                      <div className="flex gap-2">
+                        {(["male", "female", "other"] as Gender[]).map((g) => (
+                          <button
+                            type="button"
+                            key={g}
+                            onClick={() => setGenderField(g)}
+                            className={`flex-1 py-2 rounded-lg font-semibold text-sm capitalize transition-colors ${
+                              gender === g ? "bg-green-600 text-white" : "bg-accent text-muted"
+                            }`}
+                          >
+                            {g}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+                <input
+                  type="email"
+                  required
+                  placeholder="Email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full bg-card border border-app rounded-xl px-4 py-3 text-app placeholder:text-subtle focus:outline-none focus:border-green-500"
+                />
+                <input
+                  type="password"
+                  required
+                  minLength={6}
+                  placeholder="Password (min 6 characters)"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full bg-card border border-app rounded-xl px-4 py-3 text-app placeholder:text-subtle focus:outline-none focus:border-green-500"
+                />
+                <button
+                  type="submit"
+                  disabled={busy}
+                  className="w-full py-3 rounded-xl bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-bold transition-colors"
+                >
+                  {busy ? "Loading…" : mode === "signup" ? "Create Account" : "Sign In"}
+                </button>
+                {err && <p className="text-danger text-sm text-center">{err}</p>}
+              </form>
+
+              <div className="flex items-center gap-3 my-2">
+                <div className="flex-1 h-px bg-app border-t border-app" />
+                <span className="text-subtle text-sm">or play as guest</span>
+                <div className="flex-1 h-px border-t border-app" />
+              </div>
+
+              <div>
+                <label className="text-subtle text-xs uppercase tracking-wider block mb-2">
+                  Gender (for club defaults)
+                </label>
+                <div className="flex gap-2 mb-3">
+                  {(["male", "female", "other"] as Gender[]).map((g) => (
+                    <button
+                      type="button"
+                      key={g}
+                      onClick={() => { setGender(g); setGenderField(g); }}
+                      className={`flex-1 py-2 rounded-lg font-semibold text-sm capitalize transition-colors ${
+                        gender === g ? "bg-green-600 text-white" : "bg-accent text-muted"
+                      }`}
+                    >
+                      {g}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <button
+                onClick={() => { setGender(gender); router.push("/setup"); }}
+                className="w-full py-3 rounded-xl border border-green-600 text-green-700 dark:text-green-400 font-semibold hover:bg-green-50 dark:hover:bg-green-900/30 transition-colors"
+              >
+                Play without signing in
+              </button>
+              <p className="text-subtle text-xs text-center">
+                Guest rounds won&apos;t be saved.
+              </p>
+            </>
+          )}
         </div>
-      </main>
-    </div>
+
+        <p className="mt-12 text-subtle text-xs text-center">
+          909 Ferndale Ave, Herndon VA 20170 · (703) 471-5769
+        </p>
+      </div>
+    </main>
   );
 }
