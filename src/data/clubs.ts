@@ -103,12 +103,24 @@ export const DEFAULT_BAG: string[] = [
   "putter",
 ];
 
+// Effective average yardage for a club: user override → gender default.
+export function effectiveAvgYards(
+  club: Club,
+  gender: Gender,
+  overrides?: Record<string, number>,
+): number {
+  const o = overrides?.[club.id];
+  if (typeof o === "number" && o > 0) return Math.round(o);
+  return club.avgYards[gender];
+}
+
 // Suggest a default club for a given remaining distance, restricted to a bag.
 export function suggestClub(
   remainingYards: number,
   gender: Gender,
   onGreen = false,
   bag: string[] = DEFAULT_BAG,
+  overrides?: Record<string, number>,
 ): Club {
   const inBag = (id: string) => bag.includes(id);
   const putter = CLUBS.find((c) => c.id === "putter")!;
@@ -120,7 +132,7 @@ export function suggestClub(
   for (const c of CLUBS) {
     if (c.category === "putter") continue;
     if (!inBag(c.id)) continue;
-    const avg = c.avgYards[gender];
+    const avg = effectiveAvgYards(c, gender, overrides);
     if (avg <= 0) continue;
     const delta = Math.abs(avg - remainingYards);
     if (delta < bestDelta) {
@@ -132,7 +144,7 @@ export function suggestClub(
   if (!best) {
     for (const c of CLUBS) {
       if (c.category === "putter") continue;
-      const avg = c.avgYards[gender];
+      const avg = effectiveAvgYards(c, gender, overrides);
       if (avg <= 0) continue;
       const delta = Math.abs(avg - remainingYards);
       if (delta < bestDelta) {

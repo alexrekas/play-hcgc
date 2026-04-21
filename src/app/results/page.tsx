@@ -66,16 +66,6 @@ export default function ResultsPage() {
     router.push("/setup");
   }
 
-  const scoreLabel = (diff: number) => {
-    if (diff <= -3) return "Albatross!";
-    if (diff <= -2) return "Eagle!";
-    if (diff <= -1) return "Birdie";
-    if (diff === 0) return "Even par!";
-    if (diff === 1) return "Bogey round";
-    if (diff <= 5)  return "Over par";
-    return "Keep practising!";
-  };
-
   function sgColor(sg: number) {
     if (sg > 0.15) return "text-primary";
     if (sg < -0.15) return "text-danger";
@@ -101,7 +91,7 @@ export default function ResultsPage() {
           </p>
           <div className="text-7xl font-bold mb-2">{round.totalStrokes}</div>
           <p className={`text-2xl font-semibold ${scoreToPar > 0 ? "text-danger" : scoreToPar < 0 ? "text-warning" : "text-primary"}`}>
-            {scoreToPar === 0 ? "Even par" : scoreToPar > 0 ? `+${scoreToPar}` : scoreToPar} · {scoreLabel(scoreToPar)}
+            {scoreToPar === 0 ? "Even par" : scoreToPar > 0 ? `+${scoreToPar}` : scoreToPar}
           </p>
           <p className="text-subtle text-sm mt-1">Par {round.totalPar}</p>
           {typeof round.totalStrokesGained === "number" && (

@@ -10,6 +10,7 @@ interface Ctx {
   profile: UserProfile | null;
   gender: Gender;              // defaults to "male" for guests
   bag: string[];               // club IDs — falls back to DEFAULT_BAG for guests
+  clubAverages: Record<string, number>;
   setProfile: (p: UserProfile) => Promise<void>;
   setGender: (g: Gender) => void; // for guests (local state only)
 }
@@ -18,6 +19,7 @@ const ProfileContext = createContext<Ctx>({
   profile: null,
   gender: "male",
   bag: DEFAULT_BAG,
+  clubAverages: {},
   setProfile: async () => {},
   setGender: () => {},
 });
@@ -73,9 +75,10 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
   const gender = profile?.gender ?? guestGender;
   const bag = profile?.bag ?? DEFAULT_BAG;
+  const clubAverages = profile?.clubAverages ?? {};
 
   return (
-    <ProfileContext.Provider value={{ profile, gender, bag, setProfile, setGender: setGuestGender }}>
+    <ProfileContext.Provider value={{ profile, gender, bag, clubAverages, setProfile, setGender: setGuestGender }}>
       {children}
     </ProfileContext.Provider>
   );

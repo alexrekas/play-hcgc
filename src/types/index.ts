@@ -71,6 +71,8 @@ export interface UserProfile {
   displayName: string;
   gender: Gender;
   bag: string[];              // club IDs the user carries
+  /** Per-club average-distance overrides (yards). Falls back to clubs.ts defaults. */
+  clubAverages?: Record<string, number>;
   createdAt: string;
 }
 

@@ -1,6 +1,6 @@
 "use client";
 export const dynamic = "force-dynamic";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   createUserWithEmailAndPassword,
@@ -14,7 +14,10 @@ import { useAuth } from "@/lib/authContext";
 import { useProfile } from "@/lib/profileContext";
 import ThemeToggle from "@/components/ThemeToggle";
 import { DEFAULT_BAG, type Gender } from "@/data/clubs";
-import type { UserProfile } from "@/types";
+import type { UserProfile, HandicapRecord } from "@/types";
+import { getHandicapRecord } from "@/lib/firestore";
+import { COURSE, TEE_LABELS } from "@/data/course";
+import { courseHandicap } from "@/lib/handicap";
 
 type Mode = "signin" | "signup";
 
@@ -30,6 +33,12 @@ export default function LandingPage() {
   const [gender,    setGenderField] = useState<Gender>("male");
   const [err,       setErr]      = useState<string | null>(null);
   const [busy,      setBusy]     = useState(false);
+  const [hcpRecord, setHcpRecord] = useState<HandicapRecord | null>(null);
+
+  useEffect(() => {
+    if (!user) { setHcpRecord(null); return; }
+    getHandicapRecord(user.uid).then(setHcpRecord).catch(() => {});
+  }, [user]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -98,6 +107,24 @@ export default function LandingPage() {
                 {profile && (
                   <p className="text-subtle text-xs mt-0.5 capitalize">{profile.gender}</p>
                 )}
+                {hcpRecord?.handicapIndex !== null && hcpRecord?.handicapIndex !== undefined && (() => {
+                  const tee = COURSE.teeInfo.white;
+                  const ch  = courseHandicap(hcpRecord.handicapIndex!, tee.slope, tee.rating, COURSE.par);
+                  return (
+                    <div className="mt-3 pt-3 border-t border-app flex justify-around text-center">
+                      <div>
+                        <p className="text-subtle text-[10px] uppercase tracking-wider">Index</p>
+                        <p className="font-bold text-xl text-app">{hcpRecord.handicapIndex!.toFixed(1)}</p>
+                      </div>
+                      <div>
+                        <p className="text-subtle text-[10px] uppercase tracking-wider">
+                          Course Hcp ({TEE_LABELS.white})
+                        </p>
+                        <p className="font-bold text-xl text-app">{ch}</p>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
               <button
                 onClick={() => router.push("/setup")}

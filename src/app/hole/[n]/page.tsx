@@ -7,9 +7,11 @@ import { useProfile } from "@/lib/profileContext";
 import { COURSE } from "@/data/course";
 import HoleDiagram from "@/components/HoleDiagram";
 import { buildShotResult } from "@/lib/shotEngine";
-import { CLUBS, suggestClub, getClubById, CLUBS_BY_CATEGORY } from "@/data/clubs";
+import { CLUBS, suggestClub, getClubById, CLUBS_BY_CATEGORY, effectiveAvgYards } from "@/data/clubs";
 import type { LieType, ShotShape } from "@/types";
 import ThemeToggle from "@/components/ThemeToggle";
+import { scoreName, scoreNameClass } from "@/lib/scoring";
+import ShotShapeIcon from "@/components/ShotShapeIcon";
 
 const LIE_LABELS: Record<LieType, string> = {
   tee: "Tee Box",
@@ -60,7 +62,7 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
   const router  = useRouter();
 
   const { round, addShot, replaceShots, completeHole, reopenHole, advanceHole, endRound, setCurrentHole } = useGameStore();
-  const { gender, bag } = useProfile();
+  const { gender, bag, clubAverages } = useProfile();
 
   const hole      = COURSE.holes.find((h) => h.number === holeNum);
   const holeScore = round?.holes.find((h) => h.holeNumber === holeNum);
@@ -119,7 +121,7 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
   const onHole         = remainingYards === 0;
 
   // Default club suggestion restricted to the user's bag
-  const suggestedClub = suggestClub(remainingYards, gender, onGreen, bag);
+  const suggestedClub = suggestClub(remainingYards, gender, onGreen, bag, clubAverages);
   const selectedClubId = clubId || suggestedClub.id;
   const selectedClub   = getClubById(selectedClubId) ?? suggestedClub;
 
@@ -297,9 +299,12 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-subtle text-xs uppercase tracking-wider">Hole Complete</p>
-                  <p className="font-bold text-2xl">
+                  <p className={`font-bold text-2xl ${scoreNameClass(holeScore!.strokes, hole.par)}`}>
+                    {scoreName(holeScore!.strokes, hole.par)}
+                  </p>
+                  <p className="font-semibold text-app">
                     {holeScore!.strokes} strokes
-                    <span className={`ml-2 text-base ${holeScore!.strokes - hole.par > 0 ? "text-danger" : holeScore!.strokes - hole.par < 0 ? "text-warning" : "text-primary"}`}>
+                    <span className="text-subtle text-sm ml-1">
                       ({holeScore!.strokes - hole.par === 0 ? "E" : holeScore!.strokes - hole.par > 0 ? `+${holeScore!.strokes - hole.par}` : holeScore!.strokes - hole.par})
                     </span>
                   </p>
@@ -425,7 +430,7 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
                   <span>
                     {selectedClub.name}
                     {selectedClub.category !== "putter" && (
-                      <span className="text-subtle font-normal"> · avg {selectedClub.avgYards[gender]} yds</span>
+                      <span className="text-subtle font-normal"> · avg {effectiveAvgYards(selectedClub, gender, clubAverages)} yds</span>
                     )}
                   </span>
                   <span className="text-subtle text-xs">{clubPickerOpen ? "▴" : "▾"}</span>
@@ -455,7 +460,7 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
                               >
                                 <div className="font-bold">{c.shortName}</div>
                                 {c.category !== "putter" && (
-                                  <div className="text-subtle text-[10px]">{c.avgYards[gender]}y</div>
+                                  <div className="text-subtle text-[10px]">{effectiveAvgYards(c, gender, clubAverages)}y</div>
                                 )}
                               </button>
                             ))}
@@ -481,7 +486,7 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
                   type="number"
                   value={distance}
                   onChange={(e) => setDistance(e.target.value)}
-                  placeholder={`e.g. ${selectedClub.avgYards[gender] || 150}`}
+                  placeholder={`e.g. ${effectiveAvgYards(selectedClub, gender, clubAverages) || 150}`}
                   className="w-full bg-accent text-app border border-app rounded-lg px-3 py-2 text-lg font-mono focus:outline-none focus:border-green-500"
                 />
               </div>
@@ -498,15 +503,15 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
                       <button
                         key={s.id}
                         onClick={() => setShotShape(s.id)}
-                        className={`px-2 py-1.5 rounded text-xs border transition-colors ${
+                        className={`px-2 py-2 rounded text-xs border transition-colors flex flex-col items-center gap-1 ${
                           on
                             ? "border-green-500 bg-accent text-app"
                             : "border-app bg-card text-app hover:border-green-400"
                         }`}
                         title={s.hint}
                       >
-                        <div className="font-semibold">{s.label}</div>
-                        <div className="text-subtle text-[10px] leading-tight">{s.hint}</div>
+                        <ShotShapeIcon shape={s.id} size={36} className="text-app" />
+                        <div className="font-semibold text-[11px] leading-tight">{s.label}</div>
                       </button>
                     );
                   })}
@@ -551,11 +556,6 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
                 />
                 This shot holes out
               </label>
-
-              {/* Aim readout */}
-              <div className="text-xs text-subtle">
-                Aim: {aimAngle === 0 ? "drag on diagram →" : `${aimAngle > 0 ? "R" : "L"} ${Math.abs(aimAngle).toFixed(1)}°`}
-              </div>
 
               <button
                 onClick={stageShot}
