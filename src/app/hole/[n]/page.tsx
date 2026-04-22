@@ -12,6 +12,7 @@ import type { LieType, ShotShape } from "@/types";
 import ThemeToggle from "@/components/ThemeToggle";
 import { scoreName, scoreNameClass } from "@/lib/scoring";
 import ShotShapeIcon from "@/components/ShotShapeIcon";
+import { HOLE_SVG_LAYOUTS } from "@/data/holeSvgLayouts";
 
 const LIE_LABELS: Record<LieType, string> = {
   tee: "Tee Box",
@@ -74,12 +75,15 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
     if (hole) setCurrentHole(holeNum);
   }, [holeNum, hole, setCurrentHole]);
 
-  // Derive "current position" from stored shots so reopening works
+  // Derive "current position" from stored shots so reopening works.
+  // Before the first shot, start on the tee — use the per-hole SVG layout's
+  // tee position if one is registered, otherwise a generic bottom-center.
   const shots = useMemo(() => holeScore?.shots ?? [], [holeScore?.shots]);
   const lastShot = shots[shots.length - 1];
+  const teeStart = HOLE_SVG_LAYOUTS[holeNum]?.tee ?? { x: 0.5, y: 0.03 };
   const currentPos = lastShot
     ? { x: lastShot.posX, y: lastShot.posY }
-    : { x: 0.5, y: 0.03 };
+    : teeStart;
   const currentLie: LieType = lastShot ? lastShot.resultLie : "tee";
   const shotCount = shots.length + 1;
 

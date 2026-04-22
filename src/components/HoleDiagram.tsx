@@ -3,6 +3,7 @@ import { useRef, useEffect, useState, useCallback } from "react";
 import type { Hole } from "@/data/course";
 import type { ShotResult } from "@/types";
 import { HOLE_LAYOUTS, CANVAS_W, CANVAS_H } from "@/data/holeLayouts";
+import { HOLE_SVG_LAYOUTS } from "@/data/holeSvgLayouts";
 
 interface Props {
   hole: Hole;
@@ -12,7 +13,8 @@ interface Props {
 }
 
 export default function HoleDiagram({ hole, shots, currentPos, onAimConfirmed }: Props) {
-  const layout = HOLE_LAYOUTS[hole.number]; // currently undefined — user will author
+  const layout    = HOLE_LAYOUTS[hole.number];      // legacy vector layout (unused for now)
+  const svgLayout = HOLE_SVG_LAYOUTS[hole.number];  // pre-authored SVG artwork
 
   const svgRef = useRef<SVGSVGElement>(null);
   const [dragging,  setDragging]  = useState(false);
@@ -83,9 +85,14 @@ export default function HoleDiagram({ hole, shots, currentPos, onAimConfirmed }:
     };
   }, [dragging, aimEnd, origin, getPos, onAimConfirmed]);
 
-  // Placeholder geometry when no layout is provided
-  const teeX = 120, teeY = 455;
-  const greenCx = 120, greenCy = 55, greenRx = 26, greenRy = 20;
+  // Tee / green anchor points in canvas coords. If a per-hole SVG layout is
+  // registered, use its coords; otherwise fall back to the straight-down
+  // schematic geometry.
+  const teeX    = svgLayout ? svgLayout.tee.x   * CANVAS_W : 120;
+  const teeY    = svgLayout ? (1 - svgLayout.tee.y)   * CANVAS_H : 455;
+  const greenCx = svgLayout ? svgLayout.green.x * CANVAS_W : 120;
+  const greenCy = svgLayout ? (1 - svgLayout.green.y) * CANVAS_H : 55;
+  const greenRx = 26, greenRy = 20;
 
   return (
     <div className="relative select-none touch-none">
@@ -97,8 +104,20 @@ export default function HoleDiagram({ hole, shots, currentPos, onAimConfirmed }:
         className="aim-canvas rounded-xl shadow"
         style={{ background: "#e5e7eb" }}
       >
-        {/* Placeholder banner */}
-        {!layout && (
+        {/* Real hole artwork, when available */}
+        {svgLayout && (
+          <image
+            href={svgLayout.url}
+            x={0}
+            y={0}
+            width={CANVAS_W}
+            height={CANVAS_H}
+            preserveAspectRatio="xMidYMid meet"
+          />
+        )}
+
+        {/* Placeholder banner — only when no SVG artwork and no vector layout */}
+        {!layout && !svgLayout && (
           <>
             <rect width={CANVAS_W} height={CANVAS_H} fill="#f1f5f9" />
             {/* grid */}
