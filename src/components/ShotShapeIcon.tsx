@@ -26,15 +26,15 @@ interface Props {
 
 // Signs: positive curve = bulge RIGHT, negative = bulge LEFT.
 const GEOM: Record<ShotShape, { tx: number; target: number; curve: number }> = {
-  "pull-hook":  { tx: 0.5, target: 0.15, curve: -0.35 },
+  "pull-hook":  { tx: 0.5, target: 0.15, curve: 0.35 },
   "pull":       { tx: 0.5, target: 0.25, curve:  0    },
-  "pull-slice": { tx: 0.5, target: 0.35, curve:  0.30 },
-  "draw":       { tx: 0.5, target: 0.30, curve: -0.20 },
+  "pull-slice": { tx: 0.5, target: 0.35, curve:  -0.30 },
+  "draw":       { tx: 0.5, target: 0.30, curve: 0.20 },
   "straight":   { tx: 0.5, target: 0.50, curve:  0    },
-  "fade":       { tx: 0.5, target: 0.70, curve:  0.20 },
-  "push-draw":  { tx: 0.5, target: 0.65, curve: -0.30 },
+  "fade":       { tx: 0.5, target: 0.70, curve:  -0.20 },
+  "push-draw":  { tx: 0.5, target: 0.65, curve: 0.30 },
   "push":       { tx: 0.5, target: 0.75, curve:  0    },
-  "push-slice": { tx: 0.5, target: 0.85, curve:  0.35 },
+  "push-slice": { tx: 0.5, target: 0.85, curve:  -0.35 },
 };
 
 export default function ShotShapeIcon({ shape, size = 36, className = "", mirror = false }: Props) {
