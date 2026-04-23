@@ -30,7 +30,7 @@ const CATEGORY_LABELS: Record<ClubCategory, string> = {
   putter: "Putter",
 };
 
-const TEE_NAMES: TeeName[] = ["diamond", "black", "blue", "white", "red"];
+const TEE_NAMES: TeeName[] = ["diamond", "black", "blue", "white"];
 
 export default function ProfilePage() {
   const router = useRouter();

@@ -8,7 +8,7 @@ import { useProfile } from "@/lib/profileContext";
 import { COURSE, TEE_COLORS, TEE_LABELS, type TeeName } from "@/data/course";
 import ThemeToggle from "@/components/ThemeToggle";
 
-const TEE_NAMES: TeeName[] = ["diamond", "black", "blue", "white", "red"];
+const TEE_NAMES: TeeName[] = ["diamond", "black", "blue", "white"];
 
 export default function SetupPage() {
   const router = useRouter();

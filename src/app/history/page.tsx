@@ -83,7 +83,7 @@ export default function HistoryPage() {
     ? courseHandicap(index, teeInfo.slope, teeInfo.rating, COURSE.par)
     : null;
 
-  const TEE_NAMES: TeeName[] = ["diamond", "black", "blue", "white", "red"];
+  const TEE_NAMES: TeeName[] = ["diamond", "black", "blue", "white"];
 
   return (
     <main className="min-h-screen bg-app text-app pb-12">
