@@ -39,18 +39,17 @@ const LIE_COLORS: Record<LieType, string> = {
 // Lie options shown in the result-picker after each shot.
 const RESULT_LIES: LieType[] = ["fairway", "rough", "bunker", "fringe", "green", "water", "ob"];
 
-// Hints describe the flight from the player's POV. For RH, a "pull" starts
-// right of target and a "hook" curves right; LH flips in the icon via mirror.
+// Hints describe ball flight for a right-handed golfer (LH mirrors in-icon).
 const SHOT_SHAPES: Array<{ id: ShotShape; label: string; hint: string }> = [
-  { id: "pull-hook",  label: "Pull Hook",  hint: "Starts R · curves R" },
-  { id: "pull",       label: "Pull",       hint: "Starts R · holds" },
-  { id: "pull-slice", label: "Pull Slice", hint: "Starts R · curves L" },
-  { id: "draw",       label: "Draw",       hint: "Starts on · curves R" },
+  { id: "pull-hook",  label: "Pull Hook",  hint: "Starts L · curves L" },
+  { id: "pull",       label: "Pull",       hint: "Starts L · holds" },
+  { id: "pull-slice", label: "Pull Slice", hint: "Starts L · curves R" },
+  { id: "draw",       label: "Draw",       hint: "Starts on · curves L" },
   { id: "straight",   label: "Straight",   hint: "Starts on · holds" },
-  { id: "fade",       label: "Fade",       hint: "Starts on · curves L" },
-  { id: "push-draw",  label: "Push Draw",  hint: "Starts L · curves R" },
-  { id: "push",       label: "Push",       hint: "Starts L · holds" },
-  { id: "push-slice", label: "Push Slice", hint: "Starts L · curves L" },
+  { id: "fade",       label: "Fade",       hint: "Starts on · curves R" },
+  { id: "push-draw",  label: "Push Draw",  hint: "Starts R · curves L" },
+  { id: "push",       label: "Push",       hint: "Starts R · holds" },
+  { id: "push-slice", label: "Push Slice", hint: "Starts R · curves R" },
 ];
 
 function sgColor(sg: number) {
