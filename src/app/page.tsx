@@ -239,28 +239,8 @@ export default function LandingPage() {
                 <div className="flex-1 h-px border-t border-app" />
               </div>
 
-              <div>
-                <label className="text-subtle text-xs uppercase tracking-wider block mb-2">
-                  Gender (for club defaults)
-                </label>
-                <div className="flex gap-2 mb-3">
-                  {(["male", "female", "other"] as Gender[]).map((g) => (
-                    <button
-                      type="button"
-                      key={g}
-                      onClick={() => { setGender(g); setGenderField(g); }}
-                      className={`flex-1 py-2 rounded-lg font-semibold text-sm capitalize transition-colors ${
-                        gender === g ? "bg-green-600 text-white" : "bg-accent text-muted"
-                      }`}
-                    >
-                      {g}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               <button
-                onClick={() => { setGender(gender); router.push("/setup"); }}
+                onClick={() => router.push("/setup")}
                 className="w-full py-3 rounded-xl border border-green-600 text-green-700 dark:text-green-400 font-semibold hover:bg-green-50 dark:hover:bg-green-900/30 transition-colors"
               >
                 Play without signing in
