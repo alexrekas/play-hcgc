@@ -245,7 +245,7 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
         >
           ← Prev
         </button>
-        <span className="text-subtle">Shot {shotCount}{holeDone ? " · Completed" : ""}</span>
+        <span className="text-muted font-semibold">Shot {shotCount}{holeDone ? " · Completed" : ""}</span>
         <button
           disabled={holeNum >= 18}
           onClick={() => router.push(`/hole/${holeNum + 1}`)}
@@ -255,7 +255,7 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
         </button>
       </div>
 
-      {/* Full-bleed diagram with overlays */}
+      {/* Diagram area — fills remaining vertical space above the bottom card */}
       <div className="flex-1 relative min-h-0">
         <div className="absolute inset-0">
           <HoleDiagram
@@ -270,46 +270,47 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
         </div>
 
         {/* Top-left: hole stats */}
-        <div className="absolute top-2 left-2 z-10 bg-card/90 backdrop-blur border border-app rounded-xl px-3 py-2 shadow">
+        <div className="absolute top-2 left-2 z-10 bg-card border-2 border-app rounded-xl px-3 py-2 shadow-lg">
           <div className="flex items-baseline gap-2">
             <span className="text-app text-2xl font-extrabold leading-none">{holeNum}</span>
-            <span className="text-subtle text-[10px] uppercase tracking-wider">Hole</span>
+            <span className="text-muted text-[10px] uppercase tracking-wider font-semibold">Hole</span>
           </div>
           <div className="text-app text-xs mt-1 font-semibold">Par {hole.par}</div>
-          <div className="text-app text-xs font-mono">{yardage} yds</div>
-          <div className="text-subtle text-[10px] uppercase tracking-wider">SI {hole.handicapIndex}</div>
+          <div className="text-app text-xs font-mono font-semibold">{yardage} yds</div>
+          <div className="text-muted text-[10px] uppercase tracking-wider font-semibold">SI {hole.handicapIndex}</div>
         </div>
 
         {/* Top-right: score to par */}
-        <div className="absolute top-2 right-2 z-10 bg-card/90 backdrop-blur border border-app rounded-xl px-3 py-2 shadow text-right">
-          <div className="text-subtle text-[10px] uppercase tracking-wider">Thru {completedHoles.length}</div>
+        <div className="absolute top-2 right-2 z-10 bg-card border-2 border-app rounded-xl px-3 py-2 shadow-lg text-right">
+          <div className="text-muted text-[10px] uppercase tracking-wider font-semibold">Thru {completedHoles.length}</div>
           <div className={`text-2xl font-extrabold leading-none mt-1 ${scoreColor}`}>{scoreLabel}</div>
-          <div className="text-subtle text-[10px] mt-1 font-mono">{runningTotal || 0} strokes</div>
+          <div className="text-muted text-[10px] mt-1 font-mono font-semibold">{runningTotal || 0} strokes</div>
         </div>
 
-        {/* Lie indicator (small, bottom-left above the bottom card) */}
-        <div className="absolute left-2 bottom-[calc(env(safe-area-inset-bottom)+9rem)] z-10 bg-card/80 backdrop-blur border border-app rounded-lg px-2 py-1 text-[10px] shadow">
-          <span className="text-subtle uppercase tracking-wider">Lie </span>
-          <span className={`font-semibold ${LIE_COLORS[currentLie]}`}>{LIE_LABELS[currentLie]}</span>
-          <span className="text-subtle"> · {remainingYards}y left</span>
+        {/* Lie indicator (pinned to bottom of diagram area) */}
+        <div className="absolute left-2 bottom-2 z-10 bg-card border-2 border-app rounded-lg px-2 py-1 text-[11px] shadow-lg">
+          <span className="text-muted uppercase tracking-wider font-semibold">Lie </span>
+          <span className={`font-bold ${LIE_COLORS[currentLie]}`}>{LIE_LABELS[currentLie]}</span>
+          <span className="text-app font-semibold"> · {remainingYards}y left</span>
         </div>
+      </div>
 
-        {/* Bottom card — mode-dependent */}
-        <div className="absolute bottom-0 left-0 right-0 z-10 bg-card/95 backdrop-blur border-t border-app shadow-lg">
-          <div className="p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] space-y-2">
+      {/* Bottom card — in normal flow so the diagram above shrinks to fit */}
+      <div className="bg-card border-t-2 border-app shadow-lg shrink-0">
+        <div className="p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] space-y-2">
             {mode === "completed" && (
               <div className="space-y-2">
                 <div className="flex items-baseline justify-between gap-2">
                   <div>
-                    <p className="text-subtle text-[10px] uppercase tracking-wider">Hole Complete</p>
+                    <p className="text-muted text-[10px] uppercase tracking-wider font-semibold">Hole Complete</p>
                     <p className={`font-bold text-xl ${scoreNameClass(holeScore!.strokes, hole.par)}`}>
                       {scoreName(holeScore!.strokes, hole.par)}
                     </p>
-                    <p className="text-subtle text-xs">
+                    <p className="text-muted text-xs">
                       {holeScore!.strokes} strokes · {shots.length} shot{shots.length === 1 ? "" : "s"} + {holeScore!.putts} putt{holeScore!.putts === 1 ? "" : "s"}
                     </p>
                   </div>
-                  <button onClick={handleReopenHole} className="text-primary text-xs underline">
+                  <button onClick={handleReopenHole} className="text-primary text-xs underline font-semibold">
                     Edit hole
                   </button>
                 </div>
@@ -333,8 +334,8 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
 
             {mode === "pending" && (
               <div className="space-y-2">
-                <p className="text-subtle text-[10px] uppercase tracking-wider">Where did it land?</p>
-                <p className="text-app text-xs">
+                <p className="text-muted text-[10px] uppercase tracking-wider font-semibold">Where did it land?</p>
+                <p className="text-app text-xs font-semibold">
                   {getClubById(pending!.clubId)?.shortName} · {Math.round(pending!.distance)}y
                 </p>
                 <div className="grid grid-cols-4 gap-1.5">
@@ -342,13 +343,13 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
                     <button
                       key={lie}
                       onClick={() => finalizeShot(lie)}
-                      className={`py-2 rounded-lg font-semibold text-xs border border-app bg-accent hover:bg-green-600 hover:text-white transition-colors ${LIE_COLORS[lie]}`}
+                      className={`py-2 rounded-lg font-bold text-xs border border-app bg-accent hover:bg-green-600 hover:text-white transition-colors ${LIE_COLORS[lie]}`}
                     >
                       {LIE_LABELS[lie]}
                     </button>
                   ))}
                 </div>
-                <button onClick={cancelPending} className="text-subtle hover:text-app text-[10px] underline">
+                <button onClick={cancelPending} className="text-muted hover:text-app text-[11px] underline font-semibold">
                   Cancel — re-aim
                 </button>
               </div>
@@ -356,7 +357,7 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
 
             {mode === "putts" && (
               <div className="space-y-2">
-                <p className="text-app font-semibold text-sm">On the green — how many putts?</p>
+                <p className="text-app font-bold text-sm">On the green — how many putts?</p>
                 <div className="grid grid-cols-5 gap-1.5">
                   {[0, 1, 2, 3, 4].map((p) => (
                     <button
@@ -368,12 +369,17 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
                     </button>
                   ))}
                 </div>
-                <p className="text-subtle text-[10px] text-center">0 if you holed out from off the green.</p>
+                <p className="text-muted text-[11px] text-center font-semibold">0 if you holed out from off the green.</p>
               </div>
             )}
 
             {mode === "input" && (
               <div className="space-y-2">
+                {!target && (
+                  <p className="text-app text-xs text-center font-bold">
+                    Tap the map to set your target — distance updates live.
+                  </p>
+                )}
                 {/* Club chip + distance row */}
                 <div className="flex items-center gap-2">
                   <button
@@ -383,16 +389,16 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
                     <span className="min-w-0 truncate">
                       <span className="font-bold">{selectedClub.shortName}</span>
                       {selectedClub.category !== "putter" && (
-                        <span className="text-subtle text-xs"> · {effectiveAvgYards(selectedClub, gender, clubAverages)}y avg</span>
+                        <span className="text-muted text-xs font-semibold"> · {effectiveAvgYards(selectedClub, gender, clubAverages)}y avg</span>
                       )}
                       {!clubId && (
-                        <span className="text-subtle text-[10px] ml-1">(suggested)</span>
+                        <span className="text-muted text-[10px] ml-1 font-semibold">(suggested)</span>
                       )}
                     </span>
-                    <span className="text-subtle text-xs ml-2">{clubPickerOpen ? "▾" : "▸"}</span>
+                    <span className="text-muted text-xs ml-2 font-bold">{clubPickerOpen ? "▾" : "▸"}</span>
                   </button>
                   <div className="text-right shrink-0">
-                    <div className="text-subtle text-[10px] uppercase tracking-wider leading-none">Target</div>
+                    <div className="text-muted text-[10px] uppercase tracking-wider leading-none font-semibold">Target</div>
                     <div className="text-app text-2xl font-extrabold font-mono leading-tight">
                       {targetDist !== null ? `${targetDist}y` : "—"}
                     </div>
@@ -408,7 +414,7 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
                       if (list.length === 0) return null;
                       return (
                         <div key={cat}>
-                          <p className="text-subtle text-[10px] uppercase tracking-wider mb-1">
+                          <p className="text-muted text-[10px] uppercase tracking-wider mb-1 font-bold">
                             {cat === "wood" ? "Woods" : cat === "iron" ? "Irons" : cat === "wedge" ? "Wedges" : "Putter"}
                           </p>
                           <div className="grid grid-cols-4 gap-1">
@@ -424,7 +430,7 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
                               >
                                 <div className="font-bold">{c.shortName}</div>
                                 {c.category !== "putter" && (
-                                  <div className="text-subtle text-[10px]">{effectiveAvgYards(c, gender, clubAverages)}y</div>
+                                  <div className="text-muted text-[10px] font-semibold">{effectiveAvgYards(c, gender, clubAverages)}y</div>
                                 )}
                               </button>
                             ))}
@@ -433,7 +439,7 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
                       );
                     })}
                     {bagClubs.length === 0 && (
-                      <p className="text-subtle text-xs p-2">No clubs in your bag.</p>
+                      <p className="text-muted text-xs p-2 font-semibold">No clubs in your bag.</p>
                     )}
                   </div>
                 )}
@@ -457,14 +463,8 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
                   )}
                 </div>
 
-                {!target && (
-                  <p className="text-subtle text-[10px] text-center">
-                    Tap the map to set your target — distance updates live.
-                  </p>
-                )}
               </div>
             )}
-          </div>
         </div>
       </div>
 
