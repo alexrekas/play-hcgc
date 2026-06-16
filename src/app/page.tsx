@@ -252,9 +252,30 @@ export default function LandingPage() {
           )}
         </div>
 
-        <p className="mt-12 text-subtle text-xs text-center">
-          909 Ferndale Ave, Herndon VA 20170 · (703) 471-5769
-        </p>
+        <div className="mt-10 flex flex-col items-center gap-3">
+          <a
+            href="https://www.herndongolf.com/tee-times/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-semibold text-sm transition-colors"
+          >
+            Book a Tee Time →
+          </a>
+          <p className="text-subtle text-xs text-center">
+            <a
+              href="https://www.google.com/maps/dir/?api=1&destination=909+Ferndale+Ave+Herndon+VA+20170"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              909 Ferndale Ave, Herndon VA 20170
+            </a>
+            <span> · </span>
+            <a href="tel:+17034715769" className="text-primary hover:underline">
+              (703) 471-5769
+            </a>
+          </p>
+        </div>
       </div>
     </main>
   );
