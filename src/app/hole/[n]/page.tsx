@@ -94,14 +94,17 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
   const currentLie: LieType = lastShot ? lastShot.resultLie : "tee";
   const shotCount = shots.length + 1;
 
-  // Tap target (controlled by the diagram via onTargetChange).
-  const [target, setTarget] = useState<{ x: number; y: number } | null>(null);
-  const [clubId, setClubId] = useState<string>("");
+  // Aim target — set during "input" mode.
+  const [target,  setTarget]  = useState<{ x: number; y: number } | null>(null);
+  // Landing position — set during "pending" (lie-picker) mode. Defaults to the
+  // aim target when the player stages the shot; re-tapping the map updates it.
+  const [landing, setLanding] = useState<{ x: number; y: number } | null>(null);
+  const [clubId,  setClubId]  = useState<string>("");
 
-  // Reset target when the player advances (currentPos changes).
-  useEffect(() => { setTarget(null); }, [currentPos.x, currentPos.y]);
+  // Reset target+landing when the player advances (currentPos changes).
+  useEffect(() => { setTarget(null); setLanding(null); }, [currentPos.x, currentPos.y]);
 
-  // Two-step UI: tap target → Hit Shot stages → lie picker → finalize.
+  // Two-step UI: tap target → Hit Shot stages → tap landing + pick lie → finalize.
   const [pending, setPending] = useState<null | {
     clubId: string; distance: number; aim: number;
   }>(null);
@@ -109,9 +112,12 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
   const [showEndConfirm,  setShowEndConfirm]  = useState(false);
   const [clubPickerOpen,  setClubPickerOpen]  = useState(false);
 
+  // Route map taps based on mode: in pending mode they set the landing
+  // position; otherwise they set the aim target.
   const onTargetChange = useCallback((t: { x: number; y: number } | null) => {
-    setTarget(t);
-  }, []);
+    if (pending) setLanding(t);
+    else         setTarget(t);
+  }, [pending]);
 
   if (!hole || !round) {
     return (
@@ -130,6 +136,10 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
     ? targetToShot(currentPos.x, currentPos.y, target, yardage)
     : null;
   const targetDist = computed ? Math.round(computed.distanceYards) : null;
+  // Distance to the landing marker (live in the lie-picker phase).
+  const landingDist = landing
+    ? Math.round(targetToShot(currentPos.x, currentPos.y, landing, yardage).distanceYards)
+    : null;
 
   const suggestedClub = suggestClub(remainingYards, gender, onGreen, bag, clubAverages);
   const selectedClubId = clubId || suggestedClub.id;
@@ -148,16 +158,25 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
   const bagClubs = bag.length > 0 ? CLUBS.filter((c) => bag.includes(c.id)) : CLUBS;
 
   function stageShot() {
-    if (!computed || computed.distanceYards <= 0) return;
+    if (!computed || computed.distanceYards <= 0 || !target) return;
     setPending({
       clubId: selectedClubId,
       distance: computed.distanceYards,
       aim: computed.aimAngleDeg,
     });
+    // Default the landing marker to the aim target; the player can drag it
+    // to refine where the ball actually came down.
+    setLanding(target);
   }
 
   function finalizeShot(resultLie: LieType) {
     if (!pending) return;
+    // Recompute aim + distance from the (possibly re-tapped) landing point so
+    // the projected ball position lands exactly where the player indicated.
+    const finalSpot = landing ?? target;
+    const projected = finalSpot
+      ? targetToShot(currentPos.x, currentPos.y, finalSpot, yardage)
+      : { aimAngleDeg: pending.aim, distanceYards: pending.distance };
     const shot = buildShotResult({
       holeNumber: holeNum,
       shotNumber: shotCount,
@@ -166,8 +185,8 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
       prevY: currentPos.y,
       prevLie: currentLie,
       prevRemaining: remainingYards,
-      aimAngleDeg: pending.aim,
-      distanceYards: pending.distance,
+      aimAngleDeg: projected.aimAngleDeg,
+      distanceYards: projected.distanceYards,
       offlineYards: 0,
       holeLengthYards: yardage,
       holePar: hole!.par as 3 | 4 | 5,
@@ -177,12 +196,14 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
     });
     addShot(shot);
     setTarget(null);
+    setLanding(null);
     setClubId("");
     setPending(null);
   }
 
   function cancelPending() {
     setPending(null);
+    setLanding(null);
   }
 
   function handleDeleteLastShot() {
@@ -263,8 +284,10 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
             shots={shots}
             currentPos={currentPos}
             target={target}
+            landing={pending ? landing : null}
             onTargetChange={onTargetChange}
             targetDistanceYards={targetDist}
+            landingDistanceYards={landingDist}
             fill
           />
         </div>
@@ -287,8 +310,9 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
           <div className="text-muted text-[10px] mt-1 font-mono font-semibold">{runningTotal || 0} strokes</div>
         </div>
 
-        {/* Lie indicator (pinned to bottom of diagram area) */}
-        <div className="absolute left-2 bottom-2 z-10 bg-card border-2 border-app rounded-lg px-2 py-1 text-[11px] shadow-lg">
+        {/* Lie indicator — top-center under the nav strip (bottom corners are
+            taken by zoom controls and the zoom-level readout). */}
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-10 bg-card border-2 border-app rounded-lg px-2 py-1 text-[11px] shadow-lg whitespace-nowrap">
           <span className="text-muted uppercase tracking-wider font-semibold">Lie </span>
           <span className={`font-bold ${LIE_COLORS[currentLie]}`}>{LIE_LABELS[currentLie]}</span>
           <span className="text-app font-semibold"> · {remainingYards}y left</span>
@@ -334,9 +358,14 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
 
             {mode === "pending" && (
               <div className="space-y-2">
-                <p className="text-muted text-[10px] uppercase tracking-wider font-semibold">Where did it land?</p>
-                <p className="text-app text-xs font-semibold">
-                  {getClubById(pending!.clubId)?.shortName} · {Math.round(pending!.distance)}y
+                <p className="text-app text-xs text-center font-bold">
+                  Tap where the ball landed, then pick the lie.
+                </p>
+                <p className="text-muted text-[11px] text-center font-semibold">
+                  {getClubById(pending!.clubId)?.shortName} · aimed {Math.round(pending!.distance)}y
+                  {landingDist !== null && landingDist !== Math.round(pending!.distance) && (
+                    <> · landed {landingDist}y</>
+                  )}
                 </p>
                 <div className="grid grid-cols-4 gap-1.5">
                   {RESULT_LIES.map((lie) => (
