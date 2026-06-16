@@ -2,6 +2,11 @@
 export const dynamic = "force-dynamic";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  updatePassword,
+} from "firebase/auth";
 import { useAuth } from "@/lib/authContext";
 import { useProfile } from "@/lib/profileContext";
 import {
@@ -53,6 +58,52 @@ export default function ProfilePage() {
   const [teeForCH,    setTeeForCH]    = useState<TeeName>("white");
   const [editingClub, setEditingClub] = useState<string | null>(null);
   const [editDraft,   setEditDraft]   = useState("");
+
+  // Change-password modal state
+  const [pwModalOpen, setPwModalOpen] = useState(false);
+  const [currentPw,   setCurrentPw]   = useState("");
+  const [newPw,       setNewPw]       = useState("");
+  const [confirmPw,   setConfirmPw]   = useState("");
+  const [pwBusy,      setPwBusy]      = useState(false);
+  const [pwErr,       setPwErr]       = useState<string | null>(null);
+  const [pwSuccess,   setPwSuccess]   = useState(false);
+
+  function resetPwForm() {
+    setCurrentPw(""); setNewPw(""); setConfirmPw("");
+    setPwErr(null);   setPwSuccess(false);
+  }
+
+  async function changePassword(e: React.FormEvent) {
+    e.preventDefault();
+    setPwErr(null); setPwSuccess(false);
+    if (!user || !user.email) {
+      setPwErr("Not signed in.");
+      return;
+    }
+    if (newPw.length < 6) {
+      setPwErr("New password must be at least 6 characters.");
+      return;
+    }
+    if (newPw !== confirmPw) {
+      setPwErr("New passwords don't match.");
+      return;
+    }
+    setPwBusy(true);
+    try {
+      const cred = EmailAuthProvider.credential(user.email, currentPw);
+      await reauthenticateWithCredential(user, cred);
+      await updatePassword(user, newPw);
+      setPwSuccess(true);
+      setCurrentPw(""); setNewPw(""); setConfirmPw("");
+      // Auto-close the modal shortly after success.
+      setTimeout(() => { setPwModalOpen(false); setPwSuccess(false); }, 1600);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Password change failed.";
+      setPwErr(msg.replace(/^Firebase:\s*/, "").replace(/\s*\(auth\/[^)]+\)\.?$/, ""));
+    } finally {
+      setPwBusy(false);
+    }
+  }
 
   // Hydrate form from profile
   useEffect(() => {
@@ -509,6 +560,25 @@ export default function ProfilePage() {
           </div>
         </section>
 
+        {/* Account security */}
+        <section>
+          <h2 className="text-subtle font-semibold text-sm uppercase tracking-wider mb-3">
+            Account Security
+          </h2>
+          <div className="bg-card border border-app rounded-xl p-4 space-y-3">
+            <div className="text-sm">
+              <span className="text-muted">Email </span>
+              <span className="text-app font-semibold break-all">{user?.email}</span>
+            </div>
+            <button
+              onClick={() => { resetPwForm(); setPwModalOpen(true); }}
+              className="w-full py-2 rounded-lg bg-accent text-app font-semibold border border-app hover:border-green-500 transition-colors"
+            >
+              Change Password
+            </button>
+          </div>
+        </section>
+
         {/* Save bar */}
         <div className="sticky bottom-0 left-0 right-0 -mx-4 px-4 py-3 bg-app border-t border-app">
           <div className="flex items-center gap-3">
@@ -530,6 +600,73 @@ export default function ProfilePage() {
           )}
         </div>
       </div>
+
+      {/* Change-password modal */}
+      {pwModalOpen && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <form
+            onSubmit={changePassword}
+            className="bg-card border border-app rounded-2xl p-6 max-w-sm w-full space-y-3"
+          >
+            <h2 className="text-xl font-bold text-app">Change Password</h2>
+            <p className="text-muted text-xs">
+              Re-enter your current password, then choose a new one.
+            </p>
+            <input
+              type="password"
+              autoComplete="current-password"
+              placeholder="Current password"
+              value={currentPw}
+              onChange={(e) => setCurrentPw(e.target.value)}
+              required
+              className="w-full bg-accent text-app border border-app rounded-lg px-3 py-2 focus:outline-none focus:border-green-500"
+            />
+            <input
+              type="password"
+              autoComplete="new-password"
+              placeholder="New password (min 6 chars)"
+              value={newPw}
+              onChange={(e) => setNewPw(e.target.value)}
+              required
+              minLength={6}
+              className="w-full bg-accent text-app border border-app rounded-lg px-3 py-2 focus:outline-none focus:border-green-500"
+            />
+            <input
+              type="password"
+              autoComplete="new-password"
+              placeholder="Confirm new password"
+              value={confirmPw}
+              onChange={(e) => setConfirmPw(e.target.value)}
+              required
+              minLength={6}
+              className="w-full bg-accent text-app border border-app rounded-lg px-3 py-2 focus:outline-none focus:border-green-500"
+            />
+            {pwErr && (
+              <p className="text-danger text-sm font-semibold">{pwErr}</p>
+            )}
+            {pwSuccess && (
+              <p className="text-success text-sm font-semibold">Password updated ✓</p>
+            )}
+            <div className="flex gap-3 pt-1">
+              <button
+                type="button"
+                onClick={() => { setPwModalOpen(false); resetPwForm(); }}
+                disabled={pwBusy}
+                className="flex-1 py-3 rounded-xl bg-accent text-app font-semibold border border-app disabled:opacity-60"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={pwBusy || pwSuccess}
+                className="flex-1 py-3 rounded-xl bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-bold"
+              >
+                {pwBusy ? "Updating…" : pwSuccess ? "Done" : "Update Password"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </main>
   );
 }
