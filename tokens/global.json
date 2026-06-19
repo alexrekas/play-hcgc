@@ -1,0 +1,122 @@
+{
+  "global": {
+    "fairway": {
+      "value": "#3a7d44",
+      "type": "color",
+      "description": "Golf fairway green"
+    },
+    "rough": {
+      "value": "#2d6235",
+      "type": "color",
+      "description": "Golf rough green"
+    }
+  },
+  "Light": {
+    "bg": {
+      "value": "#f8fafc",
+      "type": "color"
+    },
+    "bg-elevated": {
+      "value": "#ffffff",
+      "type": "color"
+    },
+    "bg-accent": {
+      "value": "#f1f5f9",
+      "type": "color"
+    },
+    "text": {
+      "value": "#0f172a",
+      "type": "color"
+    },
+    "text-muted": {
+      "value": "#475569",
+      "type": "color"
+    },
+    "text-subtle": {
+      "value": "#64748b",
+      "type": "color"
+    },
+    "primary": {
+      "value": "#15803d",
+      "type": "color"
+    },
+    "primary-hover": {
+      "value": "#166534",
+      "type": "color"
+    },
+    "accent": {
+      "value": "#16a34a",
+      "type": "color"
+    },
+    "success": {
+      "value": "#16a34a",
+      "type": "color"
+    },
+    "danger": {
+      "value": "#dc2626",
+      "type": "color"
+    },
+    "warning": {
+      "value": "#d97706",
+      "type": "color"
+    },
+    "border": {
+      "value": "#e2e8f0",
+      "type": "color"
+    }
+  },
+  "Dark": {
+    "bg": {
+      "value": "#0b1a12",
+      "type": "color"
+    },
+    "bg-elevated": {
+      "value": "#112418",
+      "type": "color"
+    },
+    "bg-accent": {
+      "value": "#1a3224",
+      "type": "color"
+    },
+    "text": {
+      "value": "#e6f4ea",
+      "type": "color"
+    },
+    "text-muted": {
+      "value": "#9dbda7",
+      "type": "color"
+    },
+    "text-subtle": {
+      "value": "#6b8c78",
+      "type": "color"
+    },
+    "primary": {
+      "value": "#34d399",
+      "type": "color"
+    },
+    "primary-hover": {
+      "value": "#10b981",
+      "type": "color"
+    },
+    "accent": {
+      "value": "#4ade80",
+      "type": "color"
+    },
+    "success": {
+      "value": "#34d399",
+      "type": "color"
+    },
+    "danger": {
+      "value": "#f87171",
+      "type": "color"
+    },
+    "warning": {
+      "value": "#fbbf24",
+      "type": "color"
+    },
+    "border": {
+      "value": "#25452f",
+      "type": "color"
+    }
+  }
+}

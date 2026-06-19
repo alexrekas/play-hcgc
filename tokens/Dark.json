@@ -1,0 +1,77 @@
+{
+  "background": {
+    "bg": {
+      "value": "#0b1a12",
+      "type": "color",
+      "description": "Default background"
+    },
+    "bg-elevated": {
+      "value": "#112418",
+      "type": "color",
+      "description": "Elevated surface (cards, modals)"
+    },
+    "bg-accent": {
+      "value": "#1a3224",
+      "type": "color",
+      "description": "Accent background"
+    }
+  },
+  "text": {
+    "text": {
+      "value": "#e6f4ea",
+      "type": "color",
+      "description": "Primary text"
+    },
+    "text-muted": {
+      "value": "#9dbda7",
+      "type": "color",
+      "description": "Muted text"
+    },
+    "text-subtle": {
+      "value": "#6b8c78",
+      "type": "color",
+      "description": "Subtle/placeholder text"
+    }
+  },
+  "brand": {
+    "primary": {
+      "value": "#34d399",
+      "type": "color",
+      "description": "Primary brand color"
+    },
+    "primary-hover": {
+      "value": "#10b981",
+      "type": "color",
+      "description": "Primary brand hover state"
+    },
+    "accent": {
+      "value": "#4ade80",
+      "type": "color",
+      "description": "Accent brand color"
+    }
+  },
+  "semantic": {
+    "success": {
+      "value": "#34d399",
+      "type": "color",
+      "description": "Success state"
+    },
+    "danger": {
+      "value": "#f87171",
+      "type": "color",
+      "description": "Danger/error state"
+    },
+    "warning": {
+      "value": "#fbbf24",
+      "type": "color",
+      "description": "Warning state"
+    }
+  },
+  "border": {
+    "border": {
+      "value": "#25452f",
+      "type": "color",
+      "description": "Default border color"
+    }
+  }
+}

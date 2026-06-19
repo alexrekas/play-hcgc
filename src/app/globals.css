@@ -1,5 +1,76 @@
 @import "tailwindcss";
 
+/* ============================================================
+   AUTO-GENERATED — do not edit this block manually.
+   Run: node sync-tokens.mjs to regenerate from tokens/ folder
+   ============================================================ */
+
+/* Global tokens (mode-independent) */
+:root {
+  --global-fairway: #3a7d44;
+  --global-rough: #2d6235;
+  --Light-bg: #f8fafc;
+  --Light-bg-elevated: #ffffff;
+  --Light-bg-accent: #f1f5f9;
+  --Light-text: #0f172a;
+  --Light-text-muted: #475569;
+  --Light-text-subtle: #64748b;
+  --Light-primary: #15803d;
+  --Light-primary-hover: #166534;
+  --Light-accent: #16a34a;
+  --Light-success: #16a34a;
+  --Light-danger: #dc2626;
+  --Light-warning: #d97706;
+  --Light-border: #e2e8f0;
+  --Dark-bg: #0b1a12;
+  --Dark-bg-elevated: #112418;
+  --Dark-bg-accent: #1a3224;
+  --Dark-text: #e6f4ea;
+  --Dark-text-muted: #9dbda7;
+  --Dark-text-subtle: #6b8c78;
+  --Dark-primary: #34d399;
+  --Dark-primary-hover: #10b981;
+  --Dark-accent: #4ade80;
+  --Dark-success: #34d399;
+  --Dark-danger: #f87171;
+  --Dark-warning: #fbbf24;
+  --Dark-border: #25452f;
+
+/* Light mode tokens */
+  --background-bg: #f8fafc;
+  --background-bg-elevated: #ffffff;
+  --background-bg-accent: #f1f5f9;
+  --text-text: #0f172a;
+  --text-text-muted: #475569;
+  --text-text-subtle: #64748b;
+  --brand-primary: #15803d;
+  --brand-primary-hover: #166534;
+  --brand-accent: #16a34a;
+  --semantic-success: #16a34a;
+  --semantic-danger: #dc2626;
+  --semantic-warning: #d97706;
+  --border-border: #e2e8f0;
+}
+
+.dark {
+  --background-bg: #0b1a12;
+  --background-bg-elevated: #112418;
+  --background-bg-accent: #1a3224;
+  --text-text: #e6f4ea;
+  --text-text-muted: #9dbda7;
+  --text-text-subtle: #6b8c78;
+  --brand-primary: #34d399;
+  --brand-primary-hover: #10b981;
+  --brand-accent: #4ade80;
+  --semantic-success: #34d399;
+  --semantic-danger: #f87171;
+  --semantic-warning: #fbbf24;
+  --border-border: #25452f;
+}
+/* ============================================================
+   END AUTO-GENERATED
+   ============================================================ */
+
 /* Tailwind v4: enable class-based dark mode */
 @variant dark (&:where(.dark, .dark *));
 
