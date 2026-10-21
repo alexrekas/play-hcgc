@@ -9,7 +9,10 @@ import { saveRound, getHandicapRecord } from "@/lib/firestore";
 import { calcDifferential, calculateHandicapIndex, courseHandicap } from "@/lib/handicap";
 import { getClubById } from "@/data/clubs";
 import type { HandicapRecord, HoleScore } from "@/types";
+import SiteFooter from "@/components/SiteFooter";
 import ThemeToggle from "@/components/ThemeToggle";
+import AuthForm, { type AuthMode } from "@/components/AuthForm";
+import { getFirebaseAuth } from "@/lib/firebase";
 
 export default function ResultsPage() {
   const router  = useRouter();
@@ -20,6 +23,8 @@ export default function ResultsPage() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [hcpRecord, setHcpRecord] = useState<HandicapRecord | null>(null);
   const [expandedHole, setExpandedHole] = useState<number | null>(null);
+  // Guest "save this round" panel: null = collapsed, else which form is open.
+  const [guestAuthMode, setGuestAuthMode] = useState<AuthMode | null>(null);
 
   useEffect(() => {
     if (user && round?.completed) {
@@ -45,12 +50,29 @@ export default function ResultsPage() {
   const scoreToPar = round.totalStrokes - round.totalPar;
   const completedHoles = round.holes.filter((h) => h.completed);
 
-  const allRounds  = hcpRecord ? [...hcpRecord.rounds, { ...round, differential: diff }] : [{ ...round, differential: diff }];
+  // Exclude this round from the stored record so it isn't counted twice once
+  // it's been saved (e.g. a guest who signs in here and saves).
+  const priorRounds = hcpRecord ? hcpRecord.rounds.filter((r) => r.id !== round.id) : [];
+  const allRounds  = [...priorRounds, { ...round, differential: diff }];
   const newIndex   = calculateHandicapIndex(allRounds as Parameters<typeof calculateHandicapIndex>[0]);
   const chp        = newIndex !== null ? courseHandicap(newIndex, teeInfo.slope, teeInfo.rating, COURSE.par) : null;
 
   async function handleSave() {
-    if (!user || saved || !round) return;
+    if (!user) return;
+    await saveFor(user.uid);
+  }
+
+  // A guest who signs in or creates an account from this screen gets the
+  // round they just played saved straight away. Uses Firebase's currentUser
+  // because the auth context hasn't re-rendered yet at this point.
+  async function handleGuestAuthed() {
+    const uid = getFirebaseAuth().currentUser?.uid;
+    setGuestAuthMode(null);
+    if (uid) await saveFor(uid);
+  }
+
+  async function saveFor(uid: string) {
+    if (saved || saving || !round) return;
     setSaving(true);
     setSaveError(null);
     try {
@@ -58,7 +80,7 @@ export default function ResultsPage() {
       // case where the round was started while signed out (userId === null).
       const payload: import("@/types").Round = {
         ...round,
-        userId: user.uid,
+        userId: uid,
         differential: diff,
       };
       await saveRound(payload);
@@ -137,11 +159,6 @@ export default function ResultsPage() {
               </>
             )}
           </div>
-          {!user && (
-            <p className="text-subtle text-xs text-center">
-              Sign in to save rounds and track your handicap over time.
-            </p>
-          )}
           {newIndex === null && user && (
             <p className="text-subtle text-xs text-center">
               Play {3 - allRounds.length > 0 ? 3 - allRounds.length : 0} more round{allRounds.length < 3 ? "s" : ""} to establish your handicap index.
@@ -224,6 +241,44 @@ export default function ResultsPage() {
           </div>
         </div>
 
+        {/* Guests: offer to save this round by signing in / creating an account */}
+        {!user && !saved && (
+          <div className="bg-card border-2 border-green-600 rounded-xl p-4 space-y-3">
+            <div>
+              <h2 className="font-bold text-app">Save this round?</h2>
+              <p className="text-subtle text-sm">
+                Create a free account or sign in and this round is saved to your profile and counted toward your handicap.
+              </p>
+            </div>
+            {guestAuthMode === null ? (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setGuestAuthMode("signup")}
+                  className="flex-1 py-3 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold text-sm"
+                >
+                  Create account
+                </button>
+                <button
+                  onClick={() => setGuestAuthMode("signin")}
+                  className="flex-1 py-3 rounded-xl border border-app bg-accent text-app font-semibold text-sm"
+                >
+                  Sign in
+                </button>
+              </div>
+            ) : (
+              <>
+                <AuthForm mode={guestAuthMode} onModeChange={setGuestAuthMode} onSuccess={handleGuestAuthed} />
+                <button
+                  onClick={() => setGuestAuthMode(null)}
+                  className="w-full py-1 text-subtle hover:text-app text-xs"
+                >
+                  Not now
+                </button>
+              </>
+            )}
+          </div>
+        )}
+
         {/* Actions */}
         <div className="space-y-3">
           {user && !saved && (
@@ -239,6 +294,9 @@ export default function ResultsPage() {
             <p className="text-center text-danger text-sm">
               Couldn&apos;t save: {saveError}
             </p>
+          )}
+          {saving && !user && (
+            <p className="text-center text-subtle text-sm">Saving your round…</p>
           )}
           {saved && (
             <p className="text-center text-primary font-semibold">Round saved!</p>
@@ -265,6 +323,7 @@ export default function ResultsPage() {
           </button>
         </div>
       </div>
+      <SiteFooter />
     </main>
   );
 }

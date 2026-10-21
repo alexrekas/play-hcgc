@@ -8,6 +8,7 @@ import { getUserRounds, getHandicapRecord } from "@/lib/firestore";
 import { COURSE, TEE_LABELS, type TeeName } from "@/data/course";
 import { courseHandicap } from "@/lib/handicap";
 import type { Round, HandicapRecord } from "@/types";
+import SiteFooter from "@/components/SiteFooter";
 import ThemeToggle from "@/components/ThemeToggle";
 
 export default function HistoryPage() {
@@ -203,6 +204,7 @@ export default function HistoryPage() {
           Start New Round
         </button>
       </div>
+      <SiteFooter />
     </main>
   );
 }

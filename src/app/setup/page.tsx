@@ -6,6 +6,7 @@ import { useGameStore } from "@/store/gameStore";
 import { useAuth } from "@/lib/authContext";
 import { useProfile } from "@/lib/profileContext";
 import { COURSE, TEE_COLORS, TEE_LABELS, type TeeName } from "@/data/course";
+import SiteFooter from "@/components/SiteFooter";
 import ThemeToggle from "@/components/ThemeToggle";
 
 const TEE_NAMES: TeeName[] = ["diamond", "black", "blue", "white"];
@@ -16,6 +17,7 @@ export default function SetupPage() {
   const { profile } = useProfile();
   const { startRound } = useGameStore();
   const [selectedTee, setSelectedTee] = useState<TeeName>("white");
+  const [showCard,    setShowCard]    = useState(false);
 
   function begin() {
     startRound(selectedTee, user?.uid ?? null);
@@ -39,7 +41,7 @@ export default function SetupPage() {
         <ThemeToggle />
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 mt-8 space-y-8">
+      <div className="max-w-2xl mx-auto px-4 mt-6 space-y-6">
         {profile && (
           <div className="bg-card border border-app rounded-xl p-3 text-sm text-subtle text-center">
             Playing as <span className="text-app font-semibold">{profile.displayName}</span>
@@ -81,14 +83,30 @@ export default function SetupPage() {
               );
             })}
           </div>
+          <button
+            onClick={begin}
+            className="mt-4 w-full py-4 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold text-xl transition-colors"
+          >
+            Tee Off →
+          </button>
         </section>
 
         {/* Yardage card */}
         <section>
-          <h2 className="text-subtle font-semibold text-sm uppercase tracking-wider mb-3">
-            Yardage Card — {TEE_LABELS[selectedTee]} Tees
-          </h2>
-          <div className="bg-card border border-app rounded-xl overflow-hidden text-sm">
+          <button
+            onClick={() => setShowCard((v) => !v)}
+            aria-expanded={showCard}
+            aria-controls="yardage-card"
+            className="w-full flex items-center justify-between bg-card border border-app rounded-xl px-4 py-3 text-sm font-semibold text-app"
+          >
+            <span>{showCard ? "Hide yardage card" : "Show yardage card"}</span>
+            <span className="text-subtle text-xs font-normal">
+              {TEE_LABELS[selectedTee]} · {teeInfo.yards.toLocaleString()} yds · Par {COURSE.par}
+              <span aria-hidden className="ml-2">{showCard ? "▾" : "▸"}</span>
+            </span>
+          </button>
+          {showCard && (<>
+          <div id="yardage-card" className="mt-3 bg-card border border-app rounded-xl overflow-hidden text-sm">
             <table className="w-full text-center">
               <thead className="bg-accent">
                 <tr>
@@ -139,15 +157,11 @@ export default function SetupPage() {
           <p className="text-subtle text-xs mt-2 text-center">
             Course Rating {teeInfo.rating} · Slope {teeInfo.slope}
           </p>
+          </>)}
         </section>
 
-        <button
-          onClick={begin}
-          className="w-full py-4 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold text-xl transition-colors"
-        >
-          Tee Off →
-        </button>
       </div>
+      <SiteFooter />
     </main>
   );
 }

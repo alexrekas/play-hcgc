@@ -2,37 +2,25 @@
 export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut,
-  updateProfile,
-} from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
-import { getFirebaseAuth, getFirebaseDb } from "@/lib/firebase";
+import { signOut } from "firebase/auth";
+import { getFirebaseAuth } from "@/lib/firebase";
 import { useAuth } from "@/lib/authContext";
 import { useProfile } from "@/lib/profileContext";
 import ThemeToggle from "@/components/ThemeToggle";
-import { DEFAULT_BAG, type Gender } from "@/data/clubs";
-import type { UserProfile, HandicapRecord } from "@/types";
+import AuthForm, { type AuthMode } from "@/components/AuthForm";
+import SiteFooter, { UNOFFICIAL_NOTE } from "@/components/SiteFooter";
+import type { HandicapRecord } from "@/types";
 import { getHandicapRecord } from "@/lib/firestore";
 import { COURSE, TEE_LABELS } from "@/data/course";
 import { courseHandicap } from "@/lib/handicap";
 
-type Mode = "signin" | "signup";
-
 export default function LandingPage() {
   const router = useRouter();
   const { user, loading } = useAuth();
-  const { profile, setGender } = useProfile();
+  const { profile } = useProfile();
 
-  const [mode,      setMode]     = useState<Mode>("signin");
-  const [email,     setEmail]    = useState("");
-  const [password,  setPassword] = useState("");
-  const [name,      setName]     = useState("");
-  const [gender,    setGenderField] = useState<Gender>("male");
-  const [err,       setErr]      = useState<string | null>(null);
-  const [busy,      setBusy]     = useState(false);
+  // null = account options collapsed; otherwise which form is showing.
+  const [authMode,  setAuthMode]  = useState<AuthMode | null>(null);
   const [hcpRecord, setHcpRecord] = useState<HandicapRecord | null>(null);
 
   useEffect(() => {
@@ -40,35 +28,10 @@ export default function LandingPage() {
     getHandicapRecord(user.uid).then(setHcpRecord).catch(() => {});
   }, [user]);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setErr(null);
-    setBusy(true);
-    try {
-      const auth = getFirebaseAuth();
-      if (mode === "signup") {
-        const cred = await createUserWithEmailAndPassword(auth, email, password);
-        const displayName = name.trim() || email.split("@")[0];
-        await updateProfile(cred.user, { displayName });
-        const userProfile: UserProfile = {
-          uid: cred.user.uid,
-          email,
-          displayName,
-          gender,
-          dexterity: "right",
-          bag: DEFAULT_BAG,
-          createdAt: new Date().toISOString(),
-        };
-        await setDoc(doc(getFirebaseDb(), "users", cred.user.uid), userProfile);
-      } else {
-        await signInWithEmailAndPassword(auth, email, password);
-      }
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "Authentication failed";
-      setErr(msg.replace(/^Firebase:\s*/, "").replace(/\s*\(auth\/[^)]+\)\.?$/, ""));
-    } finally {
-      setBusy(false);
-    }
+  function startGuestRound() {
+    // Same path the old "Play without signing in" button took: Course Setup
+    // creates the round when the player tees off.
+    router.push("/setup");
   }
 
   if (loading) {
@@ -85,8 +48,8 @@ export default function LandingPage() {
         <ThemeToggle />
       </header>
 
-      <div className="flex-1 flex flex-col items-center justify-center px-4 pb-12">
-        <div className="text-center mb-8">
+      <div className="flex-1 flex flex-col items-center justify-center px-4 pt-2">
+        <div className="text-center mb-6">
           <div className="inline-flex items-center gap-3 mb-3">
             <span className="text-5xl">⛳</span>
             <div>
@@ -95,8 +58,9 @@ export default function LandingPage() {
             </div>
           </div>
           <p className="text-muted mt-4 max-w-sm mx-auto leading-relaxed">
-            Simulate a full 18-hole round at Herndon Centennial from anywhere.
+            Turn a range session into a round at Herndon Centennial — aim on the hole map, hit the shot, mark where it landed.
           </p>
+          <p className="text-subtle text-[11px] mt-2 max-w-xs mx-auto leading-snug">{UNOFFICIAL_NOTE}</p>
         </div>
 
         <div className="w-full max-w-sm space-y-4">
@@ -156,127 +120,56 @@ export default function LandingPage() {
             </>
           ) : (
             <>
-              <div className="flex bg-accent rounded-xl p-1">
-                <button
-                  onClick={() => { setMode("signin"); setErr(null); }}
-                  className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                    mode === "signin" ? "bg-green-600 text-white" : "text-subtle"
-                  }`}
-                >
-                  Sign In
-                </button>
-                <button
-                  onClick={() => { setMode("signup"); setErr(null); }}
-                  className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                    mode === "signup" ? "bg-green-600 text-white" : "text-subtle"
-                  }`}
-                >
-                  Create Account
-                </button>
-              </div>
-
-              <form onSubmit={handleSubmit} className="space-y-3">
-                {mode === "signup" && (
-                  <>
-                    <input
-                      type="text"
-                      placeholder="Display Name (optional)"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="w-full bg-card border border-app rounded-xl px-4 py-3 text-app placeholder:text-subtle focus:outline-none focus:border-green-500"
-                    />
-                    <div>
-                      <label className="text-subtle text-xs uppercase tracking-wider block mb-2">
-                        Gender (for club yardage defaults)
-                      </label>
-                      <div className="flex gap-2">
-                        {(["male", "female", "other"] as Gender[]).map((g) => (
-                          <button
-                            type="button"
-                            key={g}
-                            onClick={() => setGenderField(g)}
-                            className={`flex-1 py-2 rounded-lg font-semibold text-sm capitalize transition-colors ${
-                              gender === g ? "bg-green-600 text-white" : "bg-accent text-muted"
-                            }`}
-                          >
-                            {g}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                )}
-                <input
-                  type="email"
-                  required
-                  placeholder="Email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-card border border-app rounded-xl px-4 py-3 text-app placeholder:text-subtle focus:outline-none focus:border-green-500"
-                />
-                <input
-                  type="password"
-                  required
-                  minLength={6}
-                  placeholder="Password (min 6 characters)"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-card border border-app rounded-xl px-4 py-3 text-app placeholder:text-subtle focus:outline-none focus:border-green-500"
-                />
-                <button
-                  type="submit"
-                  disabled={busy}
-                  className="w-full py-3 rounded-xl bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-bold transition-colors"
-                >
-                  {busy ? "Loading…" : mode === "signup" ? "Create Account" : "Sign In"}
-                </button>
-                {err && <p className="text-danger text-sm text-center">{err}</p>}
-              </form>
-
-              <div className="flex items-center gap-3 my-2">
-                <div className="flex-1 h-px bg-app border-t border-app" />
-                <span className="text-subtle text-sm">or play as guest</span>
-                <div className="flex-1 h-px border-t border-app" />
-              </div>
-
               <button
-                onClick={() => router.push("/setup")}
-                className="w-full py-3 rounded-xl border border-green-600 text-green-700 dark:text-green-400 font-semibold hover:bg-green-50 dark:hover:bg-green-900/30 transition-colors"
+                onClick={startGuestRound}
+                className="w-full py-4 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold text-xl shadow-lg transition-colors"
               >
-                Play without signing in
+                Start a round
               </button>
-              <p className="text-subtle text-xs text-center">
-                Guest rounds won&apos;t be saved.
+              <p className="text-subtle text-xs text-center -mt-1">
+                No account needed. You can save the round at the end.
               </p>
+
+              <div className="pt-4 border-t border-app">
+                {authMode === null ? (
+                  <div className="space-y-2">
+                    <p className="text-subtle text-xs text-center">
+                      Have an account? Sign in to save rounds and track your handicap.
+                    </p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setAuthMode("signin")}
+                        className="flex-1 py-2.5 rounded-xl border border-app bg-card text-app font-semibold text-sm hover:border-green-500 transition-colors"
+                      >
+                        Sign in
+                      </button>
+                      <button
+                        onClick={() => setAuthMode("signup")}
+                        className="flex-1 py-2.5 rounded-xl border border-app bg-card text-app font-semibold text-sm hover:border-green-500 transition-colors"
+                      >
+                        Create account
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <AuthForm mode={authMode} onModeChange={setAuthMode} />
+                    <button
+                      onClick={() => setAuthMode(null)}
+                      className="w-full py-1 text-subtle hover:text-app text-xs"
+                    >
+                      Not now
+                    </button>
+                  </div>
+                )}
+              </div>
             </>
           )}
         </div>
 
-        <div className="mt-10 flex flex-col items-center gap-3">
-          <a
-            href="https://www.herndongolf.com/tee-times/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-semibold text-sm transition-colors"
-          >
-            Book a Tee Time →
-          </a>
-          <p className="text-subtle text-xs text-center">
-            <a
-              href="https://www.google.com/maps/dir/?api=1&destination=909+Ferndale+Ave+Herndon+VA+20170"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:underline"
-            >
-              909 Ferndale Ave, Herndon VA 20170
-            </a>
-            <span> · </span>
-            <a href="tel:+17034715769" className="text-primary hover:underline">
-              (703) 471-5769
-            </a>
-          </p>
-        </div>
       </div>
+
+      <SiteFooter />
     </main>
   );
 }

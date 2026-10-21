@@ -24,6 +24,7 @@ import { courseHandicap } from "@/lib/handicap";
 import type { HandicapRecord, Round, Dexterity } from "@/types";
 import { clubStatsFromRounds, buildClubAverages } from "@/lib/clubStats";
 import { ACHIEVEMENTS, computeEarnedAchievements, type Achievement } from "@/lib/achievements";
+import SiteFooter from "@/components/SiteFooter";
 import ThemeToggle from "@/components/ThemeToggle";
 
 const MAX_CLUBS = 14;
@@ -667,6 +668,7 @@ export default function ProfilePage() {
           </form>
         </div>
       )}
+      <SiteFooter />
     </main>
   );
 }

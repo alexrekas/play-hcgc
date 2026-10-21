@@ -12,6 +12,7 @@ import type { LieType } from "@/types";
 import ThemeToggle from "@/components/ThemeToggle";
 import { scoreName, scoreNameClass } from "@/lib/scoring";
 import { HOLE_SVG_LAYOUTS } from "@/data/holeSvgLayouts";
+import { detectLie } from "@/lib/lieDetect";
 
 const LIE_LABELS: Record<LieType, string> = {
   tee: "Tee Box",
@@ -35,7 +36,10 @@ const LIE_COLORS: Record<LieType, string> = {
   ob: "text-red-600 dark:text-red-400",
 };
 
-const RESULT_LIES: LieType[] = ["fairway", "rough", "bunker", "fringe", "green", "water", "ob"];
+// Lie picker: the three most common results get the big buttons; the rest sit
+// in a smaller second row.
+const PRIMARY_LIES:   LieType[] = ["fairway", "rough", "green"];
+const SECONDARY_LIES: LieType[] = ["bunker", "fringe", "water", "ob"];
 
 // Inverse of shotEngine's computeNewPosition. Given a tap target in normalized
 // canvas coords, returns the (aim, distance) pair that would project the ball
@@ -111,11 +115,15 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
 
   const [showEndConfirm,  setShowEndConfirm]  = useState(false);
   const [clubPickerOpen,  setClubPickerOpen]  = useState(false);
+  // Lie the player picked by hand in the lie picker. null = use the lie
+  // detected from the map under the landing marker.
+  const [lieOverride, setLieOverride] = useState<LieType | null>(null);
 
   // Route map taps based on mode: in pending mode they set the landing
-  // position; otherwise they set the aim target.
+  // position (and drop any hand-picked lie so detection follows the new
+  // spot); otherwise they set the aim target.
   const onTargetChange = useCallback((t: { x: number; y: number } | null) => {
-    if (pending) setLanding(t);
+    if (pending) { setLanding(t); setLieOverride(null); }
     else         setTarget(t);
   }, [pending]);
 
@@ -145,6 +153,11 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
   const selectedClubId = clubId || suggestedClub.id;
   const selectedClub   = getClubById(selectedClubId) ?? suggestedClub;
 
+  // Lie under the landing marker, read from the hole artwork. Pre-selects the
+  // lie button; the player confirms or changes it.
+  const detectedLie = pending ? detectLie(holeNum, landing ?? target) : null;
+  const chosenLie: LieType | null = lieOverride ?? detectedLie;
+
   const holeDone = holeScore?.completed === true;
   const readyForPutts = onGreen && !holeDone;
 
@@ -167,6 +180,7 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
     // Default the landing marker to the aim target; the player can drag it
     // to refine where the ball actually came down.
     setLanding(target);
+    setLieOverride(null);
   }
 
   function finalizeShot(resultLie: LieType) {
@@ -199,11 +213,13 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
     setLanding(null);
     setClubId("");
     setPending(null);
+    setLieOverride(null);
   }
 
   function cancelPending() {
     setPending(null);
     setLanding(null);
+    setLieOverride(null);
   }
 
   function handleDeleteLastShot() {
@@ -359,7 +375,7 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
             {mode === "pending" && (
               <div className="space-y-2">
                 <p className="text-app text-xs text-center font-bold">
-                  Tap where the ball landed, then pick the lie.
+                  Tap where the ball landed, then confirm the lie.
                 </p>
                 <p className="text-muted text-[11px] text-center font-semibold">
                   {getClubById(pending!.clubId)?.shortName} · aimed {Math.round(pending!.distance)}y
@@ -367,20 +383,68 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
                     <> · landed {landingDist}y</>
                   )}
                 </p>
-                <div className="grid grid-cols-4 gap-1.5">
-                  {RESULT_LIES.map((lie) => (
-                    <button
-                      key={lie}
-                      onClick={() => finalizeShot(lie)}
-                      className={`py-2 rounded-lg font-bold text-xs border border-app bg-accent hover:bg-green-600 hover:text-white transition-colors ${LIE_COLORS[lie]}`}
-                    >
-                      {LIE_LABELS[lie]}
-                    </button>
-                  ))}
+                <div role="radiogroup" aria-label="Lie" className="space-y-1.5">
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {PRIMARY_LIES.map((lie) => {
+                      const on = chosenLie === lie;
+                      return (
+                        <button
+                          key={lie}
+                          role="radio"
+                          aria-checked={on}
+                          onClick={() => setLieOverride(lie)}
+                          className={`py-3 rounded-xl font-bold text-sm border-2 transition-colors ${
+                            on
+                              ? "bg-green-600 border-green-600 text-white"
+                              : `bg-accent border-app ${LIE_COLORS[lie]}`
+                          }`}
+                        >
+                          {LIE_LABELS[lie]}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {SECONDARY_LIES.map((lie) => {
+                      const on = chosenLie === lie;
+                      return (
+                        <button
+                          key={lie}
+                          role="radio"
+                          aria-checked={on}
+                          onClick={() => setLieOverride(lie)}
+                          className={`py-1.5 rounded-lg font-semibold text-[11px] border-2 leading-tight transition-colors ${
+                            on
+                              ? "bg-green-600 border-green-600 text-white"
+                              : `bg-accent border-app ${LIE_COLORS[lie]}`
+                          }`}
+                        >
+                          {lie === "ob" ? "OB" : LIE_LABELS[lie]}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-                <button onClick={cancelPending} className="text-muted hover:text-app text-[11px] underline font-semibold">
-                  Cancel — re-aim
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={cancelPending}
+                    className="px-3 py-3 rounded-xl bg-accent text-subtle border border-app text-xs font-semibold"
+                  >
+                    Re-aim
+                  </button>
+                  <button
+                    onClick={() => chosenLie && finalizeShot(chosenLie)}
+                    disabled={!chosenLie}
+                    className="flex-1 py-3 rounded-xl bg-green-600 hover:bg-green-700 disabled:opacity-40 text-white font-bold text-base"
+                  >
+                    {chosenLie ? `Confirm · ${LIE_LABELS[chosenLie]}` : "Pick a lie"}
+                  </button>
+                </div>
+                {detectedLie && lieOverride === null && (
+                  <p className="text-muted text-[10px] text-center font-semibold -mt-0.5">
+                    Picked from the map — tap another lie if it&apos;s wrong.
+                  </p>
+                )}
               </div>
             )}
 

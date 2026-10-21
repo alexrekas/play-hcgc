@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { useRouter } from "next/navigation";
 import { useGameStore } from "@/store/gameStore";
 import { COURSE, TEE_LABELS } from "@/data/course";
+import SiteFooter from "@/components/SiteFooter";
 import ThemeToggle from "@/components/ThemeToggle";
 
 function scoreClass(score: number, par: number) {
@@ -204,6 +205,7 @@ export default function ScorecardPage() {
           {new Date(round.date).toLocaleDateString()}
         </div>
       </div>
+      <SiteFooter />
     </main>
   );
 }
