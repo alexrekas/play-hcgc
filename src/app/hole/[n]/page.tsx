@@ -396,7 +396,11 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
         >
           ← Prev
         </button>
-        <span className="text-muted font-semibold">Shot {shotCount}{holeDone ? " · Completed" : ""}</span>
+        <span className="text-muted font-semibold">
+          Stroke {shotCount + penaltyCount}
+          {penaltyCount > 0 && <span className="text-danger"> · {penaltyCount} penalty</span>}
+          {holeDone ? " · Completed" : ""}
+        </span>
         <button
           disabled={holeNum >= 18}
           onClick={() => router.push(`/hole/${holeNum + 1}`)}

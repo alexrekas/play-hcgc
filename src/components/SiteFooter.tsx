@@ -49,7 +49,7 @@ export default function SiteFooter() {
           909 Ferndale Ave, Herndon VA
         </a>
         <span aria-hidden> · </span>
-        <a href="tel:+17034715769" className={link}>(703) 471-5769</a>
+        <a href="tel:+17034715769" className={`${link} whitespace-nowrap`}>(703) 471-5769</a>
       </p>
       <p className="text-subtle text-[11px] max-w-xs mx-auto leading-snug">{UNOFFICIAL_NOTE}</p>
     </footer>
