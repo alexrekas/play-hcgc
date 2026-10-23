@@ -5,15 +5,19 @@ import { useGameStore } from "@/store/gameStore";
 import { COURSE, TEE_LABELS } from "@/data/course";
 import SiteFooter from "@/components/SiteFooter";
 import ThemeToggle from "@/components/ThemeToggle";
+import { toParClass, sgClass } from "@/lib/scoring";
 
+// Scorecard marks, as on a paper card: circle = birdie, double circle =
+// eagle or better, square = bogey, filled square = double bogey or worse.
+const MARK = "inline-flex items-center justify-center min-w-[1.6em] h-[1.6em] px-0.5 leading-none";
 function scoreClass(score: number, par: number) {
   const diff = score - par;
   if (score === 0)  return "text-subtle";
-  if (diff <= -2)   return "bg-yellow-400 text-black rounded-full px-1 inline-block min-w-[1.5em]"; // Eagle+
-  if (diff === -1)  return "bg-red-500 text-white rounded-full px-1 inline-block min-w-[1.5em]";    // Birdie
-  if (diff === 0)   return "text-app";                                                               // Par
-  if (diff === 1)   return "border border-app text-app rounded px-1 inline-block min-w-[1.5em]";    // Bogey
-  return "border-2 border-app text-app rounded px-1 inline-block min-w-[1.5em]";                    // Double+
+  if (diff <= -2)   return `${MARK} rounded-full border-2 border-score-under text-score-under outline outline-1 outline-offset-1 outline-score-under`; // Eagle+
+  if (diff === -1)  return `${MARK} rounded-full border-2 border-score-under text-score-under`;  // Birdie
+  if (diff === 0)   return "text-app";                                                         // Par
+  if (diff === 1)   return `${MARK} rounded-sm border-2 border-score-over text-score-over`;     // Bogey
+  return `${MARK} rounded-sm bg-score-over text-bg`;                                         // Double+
 }
 
 export default function ScorecardPage() {
@@ -25,7 +29,7 @@ export default function ScorecardPage() {
       <div className="min-h-screen flex items-center justify-center bg-app">
         <p className="text-subtle">
           No active round.{" "}
-          <button onClick={() => router.push("/")} className="underline text-primary">
+          <button onClick={() => router.push("/")} className="underline text-link">
             Go home
           </button>
         </p>
@@ -50,7 +54,7 @@ export default function ScorecardPage() {
         <td className="py-1.5 px-2 text-left font-semibold text-sm">
           <button
             onClick={() => router.push(`/hole/${h.holeNumber}`)}
-            className="text-primary hover:underline"
+            className="text-link hover:underline"
           >
             {h.holeNumber}
           </button>
@@ -60,24 +64,21 @@ export default function ScorecardPage() {
           {h.completed ? (
             <span className={scoreClass(h.strokes, h.par)}>{h.strokes}</span>
           ) : h.holeNumber === currentHole ? (
-            <span className="text-primary animate-pulse">–</span>
+            <span className="text-link animate-pulse">–</span>
           ) : (
             <span className="text-subtle">–</span>
           )}
         </td>
         <td className="py-1.5 px-2 text-center text-sm">
           {h.completed ? (
-            <span className={diff > 0 ? "text-danger" : diff < 0 ? "text-warning" : "text-primary"}>
+            <span className={toParClass(diff)}>
               {diff === 0 ? "E" : diff > 0 ? `+${diff}` : diff}
             </span>
           ) : null}
         </td>
         <td className="py-1.5 px-2 text-center text-xs text-subtle">
           {h.completed && h.shots.length > 0 ? (
-            <span className={
-              h.shots.reduce((s, x) => s + x.strokesGained, 0) > 0.15 ? "text-primary" :
-              h.shots.reduce((s, x) => s + x.strokesGained, 0) < -0.15 ? "text-danger" : ""
-            }>
+            <span className={sgClass(h.shots.reduce((s, x) => s + x.strokesGained, 0))}>
               {(() => {
                 const sg = h.shots.reduce((s, x) => s + x.strokesGained, 0);
                 return (sg > 0 ? "+" : "") + sg.toFixed(1);
@@ -92,7 +93,7 @@ export default function ScorecardPage() {
   return (
     <main className="min-h-screen bg-app text-app pb-8">
       <div className="bg-card border-b border-app px-4 py-3 flex items-center justify-between gap-2">
-        <button onClick={() => router.push(`/hole/${currentHole}`)} className="text-primary hover:opacity-80 text-sm font-semibold">
+        <button onClick={() => router.push(`/hole/${currentHole}`)} className="text-link hover:opacity-80 text-sm font-semibold">
           ← Hole {currentHole}
         </button>
         <h1 className="font-bold">Scorecard</h1>
@@ -105,11 +106,11 @@ export default function ScorecardPage() {
       <div className="max-w-lg mx-auto px-4 mt-6 space-y-6">
         {/* Legend */}
         <div className="flex flex-wrap gap-3 text-xs text-subtle justify-center">
-          <span><span className="bg-yellow-400 text-black rounded-full px-1">2</span> Eagle+</span>
-          <span><span className="bg-red-500 text-white rounded-full px-1">3</span> Birdie</span>
-          <span><span className="text-app">4</span> Par</span>
-          <span><span className="border border-app text-app rounded px-1">5</span> Bogey</span>
-          <span><span className="border-2 border-app text-app rounded px-1">6</span> Double+</span>
+          <span className="inline-flex items-center gap-1"><span className={scoreClass(2, 4)}>2</span> Eagle+</span>
+          <span className="inline-flex items-center gap-1"><span className={scoreClass(3, 4)}>3</span> Birdie</span>
+          <span className="inline-flex items-center gap-1"><span className={scoreClass(4, 4)}>4</span> Par</span>
+          <span className="inline-flex items-center gap-1"><span className={scoreClass(5, 4)}>5</span> Bogey</span>
+          <span className="inline-flex items-center gap-1"><span className={scoreClass(6, 4)}>6</span> Double+</span>
         </div>
 
         {/* Front 9 */}
@@ -129,13 +130,13 @@ export default function ScorecardPage() {
             </thead>
             <tbody>
               {front9.map((h) => <HoleRow key={h.holeNumber} h={h} />)}
-              <tr className="border-t-2 border-green-500 bg-accent font-bold">
+              <tr className="border-t-2 border-primary bg-accent font-bold">
                 <td className="py-2 px-2 text-left text-sm">OUT</td>
                 <td className="py-2 px-2 text-sm">{frontPar}</td>
                 <td className="py-2 px-2 text-sm">{frontStrokes || "–"}</td>
                 <td className="py-2 px-2 text-sm">
                   {frontStrokes ? (
-                    <span className={frontStrokes - frontPar > 0 ? "text-danger" : frontStrokes - frontPar < 0 ? "text-warning" : "text-primary"}>
+                    <span className={toParClass(frontStrokes - frontPar)}>
                       {frontStrokes - frontPar === 0 ? "E" : frontStrokes - frontPar > 0 ? `+${frontStrokes - frontPar}` : frontStrokes - frontPar}
                     </span>
                   ) : null}
@@ -163,13 +164,13 @@ export default function ScorecardPage() {
             </thead>
             <tbody>
               {back9.map((h) => <HoleRow key={h.holeNumber} h={h} />)}
-              <tr className="border-t-2 border-green-500 bg-accent font-bold">
+              <tr className="border-t-2 border-primary bg-accent font-bold">
                 <td className="py-2 px-2 text-left text-sm">IN</td>
                 <td className="py-2 px-2 text-sm">{backPar}</td>
                 <td className="py-2 px-2 text-sm">{backStrokes || "–"}</td>
                 <td className="py-2 px-2 text-sm">
                   {backStrokes ? (
-                    <span className={backStrokes - backPar > 0 ? "text-danger" : backStrokes - backPar < 0 ? "text-warning" : "text-primary"}>
+                    <span className={toParClass(backStrokes - backPar)}>
                       {backStrokes - backPar === 0 ? "E" : backStrokes - backPar > 0 ? `+${backStrokes - backPar}` : backStrokes - backPar}
                     </span>
                   ) : null}
@@ -186,7 +187,7 @@ export default function ScorecardPage() {
           <div className="text-right">
             <p className="font-bold text-2xl text-app">{totalStrokes || "–"}</p>
             {totalStrokes > 0 && (
-              <p className={`text-sm ${totalStrokes - totalPar > 0 ? "text-danger" : totalStrokes - totalPar < 0 ? "text-warning" : "text-primary"}`}>
+              <p className={`text-sm ${toParClass(totalStrokes - totalPar)}`}>
                 {totalStrokes - totalPar === 0 ? "Even par" : totalStrokes - totalPar > 0 ? `+${totalStrokes - totalPar}` : `${totalStrokes - totalPar}`}
               </p>
             )}
@@ -195,7 +196,7 @@ export default function ScorecardPage() {
 
         <button
           onClick={() => router.push(`/hole/${currentHole}`)}
-          className="w-full py-3 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold transition-colors"
+          className="w-full py-3 rounded-xl bg-primary hover:bg-primary-hover text-on-primary font-bold transition-colors"
         >
           ← Back to Hole {currentHole}
         </button>

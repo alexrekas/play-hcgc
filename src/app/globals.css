@@ -7,65 +7,66 @@
 
 /* Global tokens (mode-independent) */
 :root {
-  --global-fairway: #3a7d44;
-  --global-rough: #2d6235;
-  --Light-bg: #f8fafc;
-  --Light-bg-elevated: #ffffff;
-  --Light-bg-accent: #f1f5f9;
-  --Light-text: #0f172a;
-  --Light-text-muted: #475569;
-  --Light-text-subtle: #64748b;
-  --Light-primary: #15803d;
-  --Light-primary-hover: #166534;
-  --Light-accent: #16a34a;
-  --Light-success: #16a34a;
-  --Light-danger: #dc2626;
-  --Light-warning: #d97706;
-  --Light-border: #e2e8f0;
-  --Dark-bg: #0b1a12;
-  --Dark-bg-elevated: #112418;
-  --Dark-bg-accent: #1a3224;
-  --Dark-text: #e6f4ea;
-  --Dark-text-muted: #9dbda7;
-  --Dark-text-subtle: #6b8c78;
-  --Dark-primary: #34d399;
-  --Dark-primary-hover: #10b981;
-  --Dark-accent: #4ade80;
-  --Dark-success: #34d399;
-  --Dark-danger: #f87171;
-  --Dark-warning: #fbbf24;
-  --Dark-border: #25452f;
+  --course-rough: #5f6e38;
+  --course-fairway: #9aa255;
+  --course-green: #a9b05c;
+  --course-fringe: #788448;
+  --course-sand: #f3dcae;
+  --course-water: #7fb6c9;
+  --course-ob: #c9c4b2;
+  --course-canvas: #e5e7eb;
+  --map-aim: #1f5fbf;
+  --map-landing: #e8702a;
+  --map-ball: #ffffff;
+  --map-shot: #f2c94c;
+  --map-ink: #1c2117;
+  --tee-diamond: #8f7fe0;
+  --tee-black: #1c1c1c;
+  --tee-blue: #1f5fbf;
+  --tee-white: #ffffff;
 
 /* Light mode tokens */
-  --background-bg: #f8fafc;
-  --background-bg-elevated: #ffffff;
-  --background-bg-accent: #f1f5f9;
-  --text-text: #0f172a;
-  --text-text-muted: #475569;
-  --text-text-subtle: #64748b;
-  --brand-primary: #15803d;
-  --brand-primary-hover: #166534;
-  --brand-accent: #16a34a;
-  --semantic-success: #16a34a;
-  --semantic-danger: #dc2626;
-  --semantic-warning: #d97706;
-  --border-border: #e2e8f0;
+  --ui-bg: #f6f5ef;
+  --ui-surface: #ffffff;
+  --ui-sunken: #eceadf;
+  --ui-border: #d9d6c8;
+  --ui-border-strong: #bdb8a5;
+  --ui-text: #1c2117;
+  --ui-text-muted: #4b5344;
+  --ui-text-subtle: #646b5d;
+  --ui-primary: #3b6324;
+  --ui-primary-hover: #2f501c;
+  --ui-on-primary: #ffffff;
+  --ui-primary-soft: #e4ecd8;
+  --ui-link: #3b6324;
+  --ui-score-under: #b42318;
+  --ui-score-over: #1f4f86;
+  --ui-danger: #b42318;
+  --ui-warning: #9a5b00;
+  --ui-success: #3b6324;
+  --ui-focus: #1f5fbf;
 }
 
 .dark {
-  --background-bg: #0b1a12;
-  --background-bg-elevated: #112418;
-  --background-bg-accent: #1a3224;
-  --text-text: #e6f4ea;
-  --text-text-muted: #9dbda7;
-  --text-text-subtle: #6b8c78;
-  --brand-primary: #34d399;
-  --brand-primary-hover: #10b981;
-  --brand-accent: #4ade80;
-  --semantic-success: #34d399;
-  --semantic-danger: #f87171;
-  --semantic-warning: #fbbf24;
-  --border-border: #25452f;
+  --ui-bg: #11150f;
+  --ui-surface: #181d15;
+  --ui-sunken: #21271d;
+  --ui-border: #323a2c;
+  --ui-border-strong: #4a5541;
+  --ui-text: #eceee6;
+  --ui-text-muted: #b5bcaa;
+  --ui-text-subtle: #8d9583;
+  --ui-primary: #4f7f30;
+  --ui-primary-hover: #436c28;
+  --ui-on-primary: #ffffff;
+  --ui-primary-soft: #26331d;
+  --ui-link: #a9d17c;
+  --ui-score-under: #ff8a7a;
+  --ui-score-over: #8cb8ef;
+  --ui-danger: #ff8a7a;
+  --ui-warning: #f2b84b;
+  --ui-success: #a9d17c;
+  --ui-focus: #8cb8ef;
 }
 /* ============================================================
    END AUTO-GENERATED
@@ -74,58 +75,53 @@
 /* Tailwind v4: enable class-based dark mode */
 @variant dark (&:where(.dark, .dark *));
 
-/* Light (default) theme palette */
-:root {
-  --bg:           #f8fafc;
-  --bg-elevated: #ffffff;
-  --bg-accent:   #f1f5f9;
-  --text:        #0f172a;
-  --text-muted:  #475569;
-  --text-subtle: #64748b;
-  --border:      #e2e8f0;
-  --primary:     #15803d;
-  --primary-hover:#166534;
-  --accent:      #16a34a;
-  --success:     #16a34a;
-  --danger:      #dc2626;
-  --warning:     #d97706;
+/* ------------------------------------------------------------
+   Palette → Tailwind. Every colour in the app comes from the
+   tokens above (tokens/*.json → node sync-tokens.mjs). Use these
+   utilities (bg-primary, text-score-under, border-line, …) rather
+   than raw Tailwind colours like green-600.
+   ------------------------------------------------------------ */
+@theme inline {
+  --color-bg:            var(--ui-bg);
+  --color-surface:       var(--ui-surface);
+  --color-sunken:        var(--ui-sunken);
+  --color-line:          var(--ui-border);
+  --color-line-strong:   var(--ui-border-strong);
+  --color-ink:           var(--ui-text);
+  --color-ink-muted:     var(--ui-text-muted);
+  --color-ink-subtle:    var(--ui-text-subtle);
+  --color-primary:       var(--ui-primary);
+  --color-primary-hover: var(--ui-primary-hover);
+  --color-on-primary:    var(--ui-on-primary);
+  --color-primary-soft:  var(--ui-primary-soft);
+  --color-link:          var(--ui-link);
+  --color-score-under:   var(--ui-score-under);
+  --color-score-over:    var(--ui-score-over);
+  --color-danger:        var(--ui-danger);
+  --color-warning:       var(--ui-warning);
+  --color-success:       var(--ui-success);
+  --color-focus:         var(--ui-focus);
 
-  --fairway: #3a7d44;
-  --rough:   #2d6235;
-}
-
-.dark {
-  /* Very dark green / grey-green palette */
-  --bg:           #0b1a12;
-  --bg-elevated:  #112418;
-  --bg-accent:    #1a3224;
-  --text:         #e6f4ea;
-  --text-muted:   #9dbda7;
-  --text-subtle:  #6b8c78;
-  --border:       #25452f;
-  --primary:      #34d399;
-  --primary-hover:#10b981;
-  --accent:       #4ade80;
-  --success:      #34d399;
-  --danger:       #f87171;
-  --warning:      #fbbf24;
+  --color-lie-fairway:   var(--course-fairway);
+  --color-lie-rough:     var(--course-rough);
+  --color-lie-green:     var(--course-green);
+  --color-lie-fringe:    var(--course-fringe);
+  --color-lie-sand:      var(--course-sand);
+  --color-lie-water:     var(--course-water);
+  --color-lie-ob:        var(--course-ob);
 }
 
 * { box-sizing: border-box; }
-body { overscroll-behavior: none; background: var(--bg); color: var(--text); }
+body { overscroll-behavior: none; background: var(--ui-bg); color: var(--ui-text); }
 .aim-canvas { cursor: crosshair; }
+:focus-visible { outline: 2px solid var(--ui-focus); outline-offset: 2px; }
 
-/* Utility classes bound to CSS vars (for use alongside Tailwind) */
-.bg-app        { background: var(--bg); }
-.bg-card       { background: var(--bg-elevated); }
-.bg-accent     { background: var(--bg-accent); }
-.text-app      { color: var(--text); }
-.text-muted    { color: var(--text-muted); }
-.text-subtle   { color: var(--text-subtle); }
-.border-app    { border-color: var(--border); }
-.text-danger   { color: var(--danger); }
-.text-success  { color: var(--success); }
-.text-warning  { color: var(--warning); }
-.text-primary  { color: var(--primary); }
-.bg-primary    { background: var(--primary); }
-.bg-primary-hover:hover { background: var(--primary-hover); }
+/* Older semantic class names, kept so existing markup keeps working.
+   They resolve to the same tokens. */
+.bg-app        { background: var(--ui-bg); }
+.bg-card       { background: var(--ui-surface); }
+.bg-accent     { background: var(--ui-sunken); }
+.text-app      { color: var(--ui-text); }
+.text-muted    { color: var(--ui-text-muted); }
+.text-subtle   { color: var(--ui-text-subtle); }
+.border-app    { border-color: var(--ui-border); }

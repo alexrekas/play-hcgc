@@ -34,7 +34,7 @@ export default function SetupPage() {
     <main className="min-h-screen bg-app text-app pb-12">
       {/* Header */}
       <div className="bg-card border-b border-app px-4 py-4 flex items-center gap-3">
-        <button onClick={() => router.push("/")} className="text-primary hover:opacity-80 text-sm">
+        <button onClick={() => router.push("/")} className="text-link hover:opacity-80 text-sm">
           ← Back
         </button>
         <h1 className="text-lg font-bold flex-1">Course Setup</h1>
@@ -62,15 +62,16 @@ export default function SetupPage() {
                 <button
                   key={tee}
                   onClick={() => setSelectedTee(tee)}
+                  aria-pressed={active}
                   className={`rounded-xl p-4 border-2 text-left transition-all ${
                     active
-                      ? "border-green-500 bg-accent"
-                      : "border-app bg-card hover:border-green-400"
+                      ? "border-primary bg-primary-soft"
+                      : "border-app bg-card hover:border-primary"
                   }`}
                 >
                   <div className="flex items-center gap-2 mb-1">
                     <span
-                      className="w-4 h-4 rounded-full border border-app"
+                      className="w-4 h-4 rounded-full border border-line-strong"
                       style={{ backgroundColor: TEE_COLORS[tee] }}
                     />
                     <span className="font-bold text-app">{TEE_LABELS[tee]}</span>
@@ -85,7 +86,7 @@ export default function SetupPage() {
           </div>
           <button
             onClick={begin}
-            className="mt-4 w-full py-4 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold text-xl transition-colors"
+            className="mt-4 w-full py-4 rounded-xl bg-primary hover:bg-primary-hover text-on-primary font-bold text-xl transition-colors"
           >
             Tee Off →
           </button>
@@ -125,7 +126,7 @@ export default function SetupPage() {
                     <td className="py-1.5 px-3 text-subtle">{h.handicapIndex}</td>
                   </tr>
                 ))}
-                <tr className="border-t-2 border-green-500 bg-accent font-bold">
+                <tr className="border-t-2 border-primary bg-accent font-bold">
                   <td className="py-1.5 px-3 text-left text-app">OUT</td>
                   <td className="py-1.5 px-3 text-app">{frontYards}</td>
                   <td className="py-1.5 px-3 text-app">{front9.reduce((s, h) => s + h.par, 0)}</td>
@@ -139,13 +140,13 @@ export default function SetupPage() {
                     <td className="py-1.5 px-3 text-subtle">{h.handicapIndex}</td>
                   </tr>
                 ))}
-                <tr className="border-t-2 border-green-500 bg-accent font-bold">
+                <tr className="border-t-2 border-primary bg-accent font-bold">
                   <td className="py-1.5 px-3 text-left text-app">IN</td>
                   <td className="py-1.5 px-3 text-app">{backYards}</td>
                   <td className="py-1.5 px-3 text-app">{back9.reduce((s, h) => s + h.par, 0)}</td>
                   <td />
                 </tr>
-                <tr className="border-t-2 border-green-600 bg-green-600/20 font-bold text-app">
+                <tr className="border-t-2 border-primary bg-primary-soft font-bold text-app">
                   <td className="py-2 px-3 text-left">TOTAL</td>
                   <td className="py-2 px-3">{teeInfo.yards.toLocaleString()}</td>
                   <td className="py-2 px-3">{COURSE.par}</td>

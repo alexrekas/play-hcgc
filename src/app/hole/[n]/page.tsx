@@ -10,9 +10,10 @@ import { buildShotResult } from "@/lib/shotEngine";
 import { CLUBS, suggestClub, getClubById, CLUBS_BY_CATEGORY, effectiveAvgYards } from "@/data/clubs";
 import type { LieType } from "@/types";
 import ThemeToggle from "@/components/ThemeToggle";
-import { scoreName, scoreNameClass } from "@/lib/scoring";
+import { scoreName, scoreNameClass, toParClass } from "@/lib/scoring";
 import { HOLE_SVG_LAYOUTS } from "@/data/holeSvgLayouts";
 import { detectLie } from "@/lib/lieDetect";
+import { teePosition, yardsBetween, yardsToPin, aimAngleDeg as aimBetween } from "@/lib/holeGeometry";
 
 const LIE_LABELS: Record<LieType, string> = {
   tee: "Tee Box",
@@ -25,16 +26,27 @@ const LIE_LABELS: Record<LieType, string> = {
   ob: "Out of Bounds",
 };
 
-const LIE_COLORS: Record<LieType, string> = {
-  tee: "text-yellow-500",
-  fairway: "text-green-600 dark:text-green-400",
-  rough: "text-green-700 dark:text-green-500",
-  bunker: "text-yellow-600 dark:text-yellow-400",
-  fringe: "text-emerald-500 dark:text-emerald-200",
-  green: "text-emerald-600 dark:text-emerald-300",
-  water: "text-blue-600 dark:text-blue-400",
-  ob: "text-red-600 dark:text-red-400",
+// Small swatch in the hole artwork's own colour for each lie, so the button
+// and the map agree. Text stays plain ink for legibility.
+const LIE_SWATCH: Record<LieType, string> = {
+  tee: "bg-lie-green",
+  fairway: "bg-lie-fairway",
+  rough: "bg-lie-rough",
+  bunker: "bg-lie-sand",
+  fringe: "bg-lie-fringe",
+  green: "bg-lie-green",
+  water: "bg-lie-water",
+  ob: "bg-lie-ob",
 };
+
+function LieSwatch({ lie }: { lie: LieType }) {
+  return (
+    <span
+      aria-hidden
+      className={`inline-block w-2.5 h-2.5 rounded-full border border-black/20 shrink-0 ${LIE_SWATCH[lie]}`}
+    />
+  );
+}
 
 // Lie picker: the three most common results get the big buttons; the rest sit
 // in a smaller second row.
@@ -68,11 +80,6 @@ function targetToShot(
   return { aimAngleDeg, distanceYards: Math.max(0, distanceYards) };
 }
 
-function sgColor(sg: number) {
-  if (sg > 0.15) return "text-green-600 dark:text-green-400";
-  if (sg < -0.15) return "text-red-600 dark:text-red-400";
-  return "text-subtle";
-}
 
 export default function HolePage({ params }: { params: Promise<{ n: string }> }) {
   const { n } = use(params);
@@ -91,7 +98,10 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
 
   const shots = useMemo(() => holeScore?.shots ?? [], [holeScore?.shots]);
   const lastShot = shots[shots.length - 1];
-  const teeStart = HOLE_SVG_LAYOUTS[holeNum]?.tee ?? { x: 0.5, y: 0.03 };
+  // Tee shot starts on the selected tee set's markers (Diamond uses Black's).
+  const teeStart =
+    (round && teePosition(holeNum, round.tee)) ??
+    HOLE_SVG_LAYOUTS[holeNum]?.tee ?? { x: 0.5, y: 0.03 };
   const currentPos = lastShot
     ? { x: lastShot.posX, y: lastShot.posY }
     : teeStart;
@@ -139,15 +149,20 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
   const remainingYards = lastShot ? lastShot.remainingYards : yardage;
   const onGreen        = currentLie === "green";
 
+  // Straight-line yards between two map points, scaled so the selected tee →
+  // pin is the scorecard yardage. Falls back to the old projection for any
+  // hole without geometry data.
+  function shotBetween(from: { x: number; y: number }, to: { x: number; y: number }) {
+    const yards = yardsBetween(holeNum, round!.tee, from, to);
+    if (yards === null) return targetToShot(from.x, from.y, to, yardage);
+    return { aimAngleDeg: aimBetween(from, to), distanceYards: yards };
+  }
+
   // Distance / aim derived from the current tap target.
-  const computed = target
-    ? targetToShot(currentPos.x, currentPos.y, target, yardage)
-    : null;
+  const computed = target ? shotBetween(currentPos, target) : null;
   const targetDist = computed ? Math.round(computed.distanceYards) : null;
   // Distance to the landing marker (live in the lie-picker phase).
-  const landingDist = landing
-    ? Math.round(targetToShot(currentPos.x, currentPos.y, landing, yardage).distanceYards)
-    : null;
+  const landingDist = landing ? Math.round(shotBetween(currentPos, landing).distanceYards) : null;
 
   const suggestedClub = suggestClub(remainingYards, gender, onGreen, bag, clubAverages);
   const selectedClubId = clubId || suggestedClub.id;
@@ -166,7 +181,7 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
   const runningPar     = completedHoles.reduce((s, h) => s + h.par, 0);
   const scoreToPar     = runningTotal - runningPar;
   const scoreLabel     = scoreToPar === 0 ? "E" : scoreToPar > 0 ? `+${scoreToPar}` : `${scoreToPar}`;
-  const scoreColor     = scoreToPar > 0 ? "text-danger" : scoreToPar < 0 ? "text-warning" : "text-primary";
+  const scoreColor     = toParClass(scoreToPar);
 
   const bagClubs = bag.length > 0 ? CLUBS.filter((c) => bag.includes(c.id)) : CLUBS;
 
@@ -189,8 +204,9 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
     // the projected ball position lands exactly where the player indicated.
     const finalSpot = landing ?? target;
     const projected = finalSpot
-      ? targetToShot(currentPos.x, currentPos.y, finalSpot, yardage)
+      ? shotBetween(currentPos, finalSpot)
       : { aimAngleDeg: pending.aim, distanceYards: pending.distance };
+    const toPin = finalSpot ? yardsToPin(holeNum, round!.tee, finalSpot) : null;
     const shot = buildShotResult({
       holeNumber: holeNum,
       shotNumber: shotCount,
@@ -207,6 +223,8 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
       resultLie,
       shotShape: "straight",
       holeOut: false,
+      landing: finalSpot && toPin !== null ? finalSpot : undefined,
+      remainingOverride: toPin ?? undefined,
     });
     addShot(shot);
     setTarget(null);
@@ -256,7 +274,7 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
         <div className="flex items-center gap-2 min-w-0">
           <button
             onClick={() => router.push("/scorecard")}
-            className="text-primary hover:opacity-80 text-xs font-semibold border border-app rounded-lg px-2 py-1"
+            className="text-link hover:opacity-80 text-xs font-semibold border border-app rounded-lg px-2 py-1"
           >
             Scorecard
           </button>
@@ -278,7 +296,7 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
         <button
           disabled={holeNum <= 1}
           onClick={() => router.push(`/hole/${holeNum - 1}`)}
-          className="text-primary disabled:opacity-30 font-semibold py-1 px-1"
+          className="text-link disabled:opacity-30 font-semibold min-h-10 px-3 -mx-2"
         >
           ← Prev
         </button>
@@ -286,7 +304,7 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
         <button
           disabled={holeNum >= 18}
           onClick={() => router.push(`/hole/${holeNum + 1}`)}
-          className="text-primary disabled:opacity-30 font-semibold py-1 px-1"
+          className="text-link disabled:opacity-30 font-semibold min-h-10 px-3 -mx-2"
         >
           Next →
         </button>
@@ -299,6 +317,7 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
             hole={hole}
             shots={shots}
             currentPos={currentPos}
+            teePos={teeStart}
             target={target}
             landing={pending ? landing : null}
             onTargetChange={onTargetChange}
@@ -312,25 +331,25 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
         <div className="absolute top-2 left-2 z-10 bg-card border-2 border-app rounded-xl px-3 py-2 shadow-lg">
           <div className="flex items-baseline gap-2">
             <span className="text-app text-2xl font-extrabold leading-none">{holeNum}</span>
-            <span className="text-muted text-[10px] uppercase tracking-wider font-semibold">Hole</span>
+            <span className="text-muted text-[11px] uppercase tracking-wider font-semibold">Hole</span>
           </div>
           <div className="text-app text-xs mt-1 font-semibold">Par {hole.par}</div>
           <div className="text-app text-xs font-mono font-semibold">{yardage} yds</div>
-          <div className="text-muted text-[10px] uppercase tracking-wider font-semibold">SI {hole.handicapIndex}</div>
+          <div className="text-muted text-[11px] uppercase tracking-wider font-semibold">SI {hole.handicapIndex}</div>
         </div>
 
         {/* Top-right: score to par */}
         <div className="absolute top-2 right-2 z-10 bg-card border-2 border-app rounded-xl px-3 py-2 shadow-lg text-right">
-          <div className="text-muted text-[10px] uppercase tracking-wider font-semibold">Thru {completedHoles.length}</div>
+          <div className="text-muted text-[11px] uppercase tracking-wider font-semibold">Thru {completedHoles.length}</div>
           <div className={`text-2xl font-extrabold leading-none mt-1 ${scoreColor}`}>{scoreLabel}</div>
-          <div className="text-muted text-[10px] mt-1 font-mono font-semibold">{runningTotal || 0} strokes</div>
+          <div className="text-muted text-[11px] mt-1 font-mono font-semibold">{runningTotal || 0} strokes</div>
         </div>
 
         {/* Lie indicator — top-center under the nav strip (bottom corners are
             taken by zoom controls and the zoom-level readout). */}
         <div className="absolute top-2 left-1/2 -translate-x-1/2 z-10 bg-card border-2 border-app rounded-lg px-2 py-1 text-[11px] shadow-lg whitespace-nowrap">
           <span className="text-muted uppercase tracking-wider font-semibold">Lie </span>
-          <span className={`font-bold ${LIE_COLORS[currentLie]}`}>{LIE_LABELS[currentLie]}</span>
+          <span className="inline-flex items-center gap-1 font-bold text-app align-middle"><LieSwatch lie={currentLie} />{LIE_LABELS[currentLie]}</span>
           <span className="text-app font-semibold"> · {remainingYards}y left</span>
         </div>
       </div>
@@ -342,7 +361,7 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
               <div className="space-y-2">
                 <div className="flex items-baseline justify-between gap-2">
                   <div>
-                    <p className="text-muted text-[10px] uppercase tracking-wider font-semibold">Hole Complete</p>
+                    <p className="text-muted text-[11px] uppercase tracking-wider font-semibold">Hole Complete</p>
                     <p className={`font-bold text-xl ${scoreNameClass(holeScore!.strokes, hole.par)}`}>
                       {scoreName(holeScore!.strokes, hole.par)}
                     </p>
@@ -350,21 +369,21 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
                       {holeScore!.strokes} strokes · {shots.length} shot{shots.length === 1 ? "" : "s"} + {holeScore!.putts} putt{holeScore!.putts === 1 ? "" : "s"}
                     </p>
                   </div>
-                  <button onClick={handleReopenHole} className="text-primary text-xs underline font-semibold">
+                  <button onClick={handleReopenHole} className="text-link text-xs underline font-semibold">
                     Edit hole
                   </button>
                 </div>
                 {holeNum < 18 ? (
                   <button
                     onClick={() => { advanceHole(); router.push(`/hole/${holeNum + 1}`); }}
-                    className="w-full py-3 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold"
+                    className="w-full py-3 rounded-xl bg-primary hover:bg-primary-hover text-on-primary font-bold"
                   >
                     Next Hole →
                   </button>
                 ) : (
                   <button
                     onClick={handleEndRound}
-                    className="w-full py-3 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold"
+                    className="w-full py-3 rounded-xl bg-primary hover:bg-primary-hover text-on-primary font-bold"
                   >
                     Finish Round
                   </button>
@@ -393,12 +412,13 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
                           role="radio"
                           aria-checked={on}
                           onClick={() => setLieOverride(lie)}
-                          className={`py-3 rounded-xl font-bold text-sm border-2 transition-colors ${
+                          className={`min-h-12 flex items-center justify-center gap-1.5 rounded-xl font-bold text-sm border-2 transition-colors ${
                             on
-                              ? "bg-green-600 border-green-600 text-white"
-                              : `bg-accent border-app ${LIE_COLORS[lie]}`
+                              ? "bg-primary border-primary text-on-primary"
+                              : "bg-card border-line-strong text-app"
                           }`}
                         >
+                          <LieSwatch lie={lie} />
                           {LIE_LABELS[lie]}
                         </button>
                       );
@@ -413,12 +433,14 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
                           role="radio"
                           aria-checked={on}
                           onClick={() => setLieOverride(lie)}
-                          className={`py-1.5 rounded-lg font-semibold text-[11px] border-2 leading-tight transition-colors ${
+                          aria-label={LIE_LABELS[lie]}
+                          className={`min-h-10 flex items-center justify-center gap-1 rounded-lg font-semibold text-xs border-2 leading-tight transition-colors ${
                             on
-                              ? "bg-green-600 border-green-600 text-white"
-                              : `bg-accent border-app ${LIE_COLORS[lie]}`
+                              ? "bg-primary border-primary text-on-primary"
+                              : "bg-card border-line-strong text-app"
                           }`}
                         >
+                          <LieSwatch lie={lie} />
                           {lie === "ob" ? "OB" : LIE_LABELS[lie]}
                         </button>
                       );
@@ -435,13 +457,13 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
                   <button
                     onClick={() => chosenLie && finalizeShot(chosenLie)}
                     disabled={!chosenLie}
-                    className="flex-1 py-3 rounded-xl bg-green-600 hover:bg-green-700 disabled:opacity-40 text-white font-bold text-base"
+                    className="flex-1 py-3 rounded-xl bg-primary hover:bg-primary-hover disabled:opacity-40 text-on-primary font-bold text-base"
                   >
                     {chosenLie ? `Confirm · ${LIE_LABELS[chosenLie]}` : "Pick a lie"}
                   </button>
                 </div>
                 {detectedLie && lieOverride === null && (
-                  <p className="text-muted text-[10px] text-center font-semibold -mt-0.5">
+                  <p className="text-muted text-[11px] text-center font-semibold -mt-0.5">
                     Picked from the map — tap another lie if it&apos;s wrong.
                   </p>
                 )}
@@ -452,17 +474,22 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
               <div className="space-y-2">
                 <p className="text-app font-bold text-sm">On the green — how many putts?</p>
                 <div className="grid grid-cols-5 gap-1.5">
-                  {[0, 1, 2, 3, 4].map((p) => (
+                  {[1, 2, 3, 4, 5].map((p) => (
                     <button
                       key={p}
                       onClick={() => handleRecordPutts(p)}
-                      className="py-3 rounded-xl font-bold text-lg border border-app bg-accent text-app hover:bg-green-600 hover:text-white"
+                      className="min-h-12 rounded-xl font-bold text-lg border border-app bg-accent text-app hover:bg-primary-soft"
                     >
-                      {p}
+                      {p === 5 ? "5" : p}
                     </button>
                   ))}
                 </div>
-                <p className="text-muted text-[11px] text-center font-semibold">0 if you holed out from off the green.</p>
+                <button
+                  onClick={() => handleRecordPutts(0)}
+                  className="w-full min-h-10 rounded-xl text-sm font-semibold border border-app bg-card text-app"
+                >
+                  Holed out — no putts
+                </button>
               </div>
             )}
 
@@ -485,13 +512,13 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
                         <span className="text-muted text-xs font-semibold"> · {effectiveAvgYards(selectedClub, gender, clubAverages)}y avg</span>
                       )}
                       {!clubId && (
-                        <span className="text-muted text-[10px] ml-1 font-semibold">(suggested)</span>
+                        <span className="text-muted text-[11px] ml-1 font-semibold">(suggested)</span>
                       )}
                     </span>
                     <span className="text-muted text-xs ml-2 font-bold">{clubPickerOpen ? "▾" : "▸"}</span>
                   </button>
                   <div className="text-right shrink-0">
-                    <div className="text-muted text-[10px] uppercase tracking-wider leading-none font-semibold">Target</div>
+                    <div className="text-muted text-[11px] uppercase tracking-wider leading-none font-semibold">Target</div>
                     <div className="text-app text-2xl font-extrabold font-mono leading-tight">
                       {targetDist !== null ? `${targetDist}y` : "—"}
                     </div>
@@ -507,7 +534,7 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
                       if (list.length === 0) return null;
                       return (
                         <div key={cat}>
-                          <p className="text-muted text-[10px] uppercase tracking-wider mb-1 font-bold">
+                          <p className="text-muted text-[11px] uppercase tracking-wider mb-1 font-bold">
                             {cat === "wood" ? "Woods" : cat === "iron" ? "Irons" : cat === "wedge" ? "Wedges" : "Putter"}
                           </p>
                           <div className="grid grid-cols-4 gap-1">
@@ -517,13 +544,13 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
                                 onClick={() => { setClubId(c.id); setClubPickerOpen(false); }}
                                 className={`px-2 py-1.5 rounded text-left text-[11px] border ${
                                   c.id === selectedClubId
-                                    ? "border-green-500 bg-accent text-app"
-                                    : "border-app bg-card text-app hover:border-green-400"
+                                    ? "border-primary bg-accent text-app"
+                                    : "border-app bg-card text-app hover:border-primary"
                                 }`}
                               >
                                 <div className="font-bold">{c.shortName}</div>
                                 {c.category !== "putter" && (
-                                  <div className="text-muted text-[10px] font-semibold">{effectiveAvgYards(c, gender, clubAverages)}y</div>
+                                  <div className="text-muted text-[11px] font-semibold">{effectiveAvgYards(c, gender, clubAverages)}y</div>
                                 )}
                               </button>
                             ))}
@@ -541,7 +568,7 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
                   <button
                     onClick={stageShot}
                     disabled={!target || (targetDist ?? 0) <= 0}
-                    className="flex-1 py-3 rounded-xl bg-green-600 hover:bg-green-700 disabled:opacity-40 text-white font-bold text-base"
+                    className="flex-1 py-3 rounded-xl bg-primary hover:bg-primary-hover disabled:opacity-40 text-on-primary font-bold text-base"
                   >
                     Hit Shot
                   </button>
@@ -579,7 +606,7 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
               </button>
               <button
                 onClick={handleEndRound}
-                className="flex-1 py-3 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold"
+                className="flex-1 py-3 rounded-xl bg-danger hover:opacity-90 text-on-primary font-bold"
               >
                 End Round
               </button>
@@ -588,8 +615,6 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
         </div>
       )}
 
-      {/* Suppress unused-import noise; sgColor stays available for future shot list UI */}
-      <span className="hidden">{sgColor(0)}</span>
     </main>
   );
 }

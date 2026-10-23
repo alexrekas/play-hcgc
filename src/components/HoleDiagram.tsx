@@ -9,6 +9,8 @@ interface Props {
   hole: Hole;
   shots: ShotResult[];
   currentPos: { x: number; y: number };
+  /** Where this hole's tee shot starts (the selected tee set). */
+  teePos?: { x: number; y: number };
   /** Aim target — where the player is pointing. */
   target: { x: number; y: number } | null;
   /** Landing target — where the ball actually came down (set in lie-picker phase). */
@@ -28,7 +30,7 @@ const MIN_ZOOM = 1;
 const ZOOM_STEP = 0.5;
 
 export default function HoleDiagram({
-  hole, shots, currentPos, target, landing = null, onTargetChange,
+  hole, shots, currentPos, teePos, target, landing = null, onTargetChange,
   fill = false, targetDistanceYards = null, landingDistanceYards = null,
 }: Props) {
   const layout    = HOLE_LAYOUTS[hole.number];
@@ -156,8 +158,9 @@ export default function HoleDiagram({
   }, [eventToNorm, onTargetChange, scale]);
 
   // Tee / green anchor points in canvas coords.
-  const teeX    = svgLayout ? svgLayout.tee.x   * CANVAS_W : 120;
-  const teeY    = svgLayout ? (1 - svgLayout.tee.y)   * CANVAS_H : 455;
+  const teeStart = teePos ?? svgLayout?.tee;
+  const teeX    = teeStart ? teeStart.x * CANVAS_W : 120;
+  const teeY    = teeStart ? (1 - teeStart.y) * CANVAS_H : 455;
   const greenCx = svgLayout ? svgLayout.green.x * CANVAS_W : 120;
   const greenCy = svgLayout ? (1 - svgLayout.green.y) * CANVAS_H : 55;
   const greenRx = 26, greenRy = 20;
@@ -200,7 +203,7 @@ export default function HoleDiagram({
         {...svgSizeProps}
         preserveAspectRatio="xMidYMid meet"
         className={fill ? "block w-full h-full aim-canvas" : "aim-canvas rounded-xl shadow"}
-        style={{ background: "#e5e7eb" }}
+        style={{ background: "var(--course-canvas)" }}
       >
         {svgLayout && (
           <image
@@ -241,7 +244,7 @@ export default function HoleDiagram({
           ];
           let d = `M ${pts[0][0]},${pts[0][1]}`;
           for (let i = 1; i < pts.length; i++) d += ` L ${pts[i][0]},${pts[i][1]}`;
-          return <path d={d} stroke="#eab308" strokeWidth={1.2} fill="none"
+          return <path d={d} stroke="var(--map-shot)" strokeWidth={1.2} fill="none"
                        strokeDasharray="2 3" opacity={0.85} />;
         })()}
 
@@ -250,8 +253,8 @@ export default function HoleDiagram({
           const sy = (1 - s.posY) * CANVAS_H;
           return (
             <g key={i}>
-              <circle cx={sx} cy={sy} r={5} fill="#facc15" stroke="#1f2937" strokeWidth={1} />
-              <text x={sx} y={sy + 2.5} fill="#1f2937" fontSize={7}
+              <circle cx={sx} cy={sy} r={5} fill="var(--map-shot)" stroke="var(--map-ink)" strokeWidth={1} />
+              <text x={sx} y={sy + 2.5} fill="var(--map-ink)" fontSize={7}
                     fontWeight="bold" textAnchor="middle">{i + 1}</text>
             </g>
           );
@@ -259,9 +262,9 @@ export default function HoleDiagram({
 
         {/* Current ball */}
         <circle cx={origin.sx} cy={origin.sy} r={8}
-                fill="#f97316" stroke="#ffffff" strokeWidth={1.5} opacity={0.4} />
+                fill="var(--map-landing)" stroke="var(--map-ball)" strokeWidth={1.5} opacity={0.4} />
         <circle cx={origin.sx} cy={origin.sy} r={4}
-                fill="#ffffff" stroke="#f97316" strokeWidth={1.5} />
+                fill="var(--map-ball)" stroke="var(--map-landing)" strokeWidth={1.5} />
 
         {/* Aim target — bright when no landing yet, faded once the landing
             marker takes over. */}
@@ -270,20 +273,20 @@ export default function HoleDiagram({
             <line
               x1={origin.sx} y1={origin.sy}
               x2={targetSx}  y2={targetSy}
-              stroke="#1d4ed8" strokeWidth={2.2} strokeDasharray="6 4" opacity={0.95}
+              stroke="var(--map-aim)" strokeWidth={2.2} strokeDasharray="6 4" opacity={0.95}
             />
-            <circle cx={targetSx} cy={targetSy} r={7} fill="#1d4ed8" opacity={0.35} />
+            <circle cx={targetSx} cy={targetSy} r={7} fill="var(--map-aim)" opacity={0.35} />
             <circle cx={targetSx} cy={targetSy} r={3.5}
-                    fill="#1d4ed8" stroke="#ffffff" strokeWidth={1.2} />
+                    fill="var(--map-aim)" stroke="var(--map-ball)" strokeWidth={1.2} />
             {typeof targetDistanceYards === "number" && landingSx === null && (
               <g>
                 <rect
                   x={targetSx + 8} y={Math.max(2, targetSy - 12)}
-                  width={36} height={14} rx={3} fill="#1d4ed8"
+                  width={36} height={14} rx={3} fill="var(--map-aim)"
                 />
                 <text
                   x={targetSx + 26} y={Math.max(13, targetSy - 1.5)}
-                  fill="#ffffff" fontSize={9} fontWeight="bold" textAnchor="middle"
+                  fill="var(--map-ball)" fontSize={9} fontWeight="bold" textAnchor="middle"
                 >
                   {Math.round(targetDistanceYards)}y
                 </text>
@@ -295,18 +298,18 @@ export default function HoleDiagram({
         {/* Landing marker — solid orange to distinguish from aim. */}
         {landingSx !== null && landingSy !== null && (
           <g>
-            <circle cx={landingSx} cy={landingSy} r={9} fill="#f97316" opacity={0.4} />
+            <circle cx={landingSx} cy={landingSy} r={9} fill="var(--map-landing)" opacity={0.4} />
             <circle cx={landingSx} cy={landingSy} r={5}
-                    fill="#f97316" stroke="#ffffff" strokeWidth={1.5} />
+                    fill="var(--map-landing)" stroke="var(--map-ball)" strokeWidth={1.5} />
             {typeof landingDistanceYards === "number" && (
               <g>
                 <rect
                   x={landingSx + 8} y={Math.max(2, landingSy - 12)}
-                  width={38} height={14} rx={3} fill="#f97316"
+                  width={38} height={14} rx={3} fill="var(--map-landing)"
                 />
                 <text
                   x={landingSx + 27} y={Math.max(13, landingSy - 1.5)}
-                  fill="#ffffff" fontSize={9} fontWeight="bold" textAnchor="middle"
+                  fill="var(--map-ball)" fontSize={9} fontWeight="bold" textAnchor="middle"
                 >
                   {Math.round(landingDistanceYards)}y
                 </text>

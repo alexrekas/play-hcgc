@@ -1,77 +1,99 @@
 {
-  "background": {
+  "ui": {
     "bg": {
-      "value": "#f8fafc",
+      "value": "#f6f5ef",
       "type": "color",
-      "description": "Default background"
+      "description": "Page background \u2014 warm off-white"
     },
-    "bg-elevated": {
+    "surface": {
       "value": "#ffffff",
       "type": "color",
-      "description": "Elevated surface (cards, modals)"
+      "description": "Cards, sheets, inputs"
     },
-    "bg-accent": {
-      "value": "#f1f5f9",
+    "sunken": {
+      "value": "#eceadf",
       "type": "color",
-      "description": "Accent background"
-    }
-  },
-  "text": {
+      "description": "Secondary buttons, table headers, chips"
+    },
+    "border": {
+      "value": "#d9d6c8",
+      "type": "color",
+      "description": "Hairlines and card borders"
+    },
+    "border-strong": {
+      "value": "#bdb8a5",
+      "type": "color",
+      "description": "Input borders, unselected outlines"
+    },
     "text": {
-      "value": "#0f172a",
+      "value": "#1c2117",
       "type": "color",
       "description": "Primary text"
     },
     "text-muted": {
-      "value": "#475569",
+      "value": "#4b5344",
       "type": "color",
-      "description": "Muted text"
+      "description": "Secondary text"
     },
     "text-subtle": {
-      "value": "#64748b",
+      "value": "#646b5d",
       "type": "color",
-      "description": "Subtle/placeholder text"
-    }
-  },
-  "brand": {
+      "description": "Captions, hints (AA on every surface)"
+    },
     "primary": {
-      "value": "#15803d",
+      "value": "#3b6324",
       "type": "color",
-      "description": "Primary brand color"
+      "description": "Primary actions \u2014 deep course green"
     },
     "primary-hover": {
-      "value": "#166534",
+      "value": "#2f501c",
       "type": "color",
-      "description": "Primary brand hover state"
+      "description": "Primary action hover/pressed"
     },
-    "accent": {
-      "value": "#16a34a",
+    "on-primary": {
+      "value": "#ffffff",
       "type": "color",
-      "description": "Accent brand color"
-    }
-  },
-  "semantic": {
-    "success": {
-      "value": "#16a34a",
+      "description": "Text/icons on primary"
+    },
+    "primary-soft": {
+      "value": "#e4ecd8",
       "type": "color",
-      "description": "Success state"
+      "description": "Selected-state tint"
+    },
+    "link": {
+      "value": "#3b6324",
+      "type": "color",
+      "description": "Text links"
+    },
+    "score-under": {
+      "value": "#b42318",
+      "type": "color",
+      "description": "Under par \u2014 golf-red"
+    },
+    "score-over": {
+      "value": "#1f4f86",
+      "type": "color",
+      "description": "Over par \u2014 scoreboard navy"
     },
     "danger": {
-      "value": "#dc2626",
+      "value": "#b42318",
       "type": "color",
-      "description": "Danger/error state"
+      "description": "Destructive actions, errors"
     },
     "warning": {
-      "value": "#d97706",
+      "value": "#9a5b00",
       "type": "color",
-      "description": "Warning state"
-    }
-  },
-  "border": {
-    "border": {
-      "value": "#e2e8f0",
+      "description": "Warnings"
+    },
+    "success": {
+      "value": "#3b6324",
       "type": "color",
-      "description": "Default border color"
+      "description": "Success / saved"
+    },
+    "focus": {
+      "value": "#1f5fbf",
+      "type": "color",
+      "description": "Keyboard focus ring"
     }
   }
 }

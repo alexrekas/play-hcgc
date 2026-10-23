@@ -11,6 +11,7 @@ import { getClubById } from "@/data/clubs";
 import type { HandicapRecord, HoleScore } from "@/types";
 import SiteFooter from "@/components/SiteFooter";
 import ThemeToggle from "@/components/ThemeToggle";
+import { toParClass, sgClass } from "@/lib/scoring";
 import AuthForm, { type AuthMode } from "@/components/AuthForm";
 import { getFirebaseAuth } from "@/lib/firebase";
 
@@ -37,7 +38,7 @@ export default function ResultsPage() {
       <div className="min-h-screen flex items-center justify-center bg-app">
         <p className="text-subtle">
           No completed round found.{" "}
-          <button onClick={() => router.push("/")} className="underline text-primary">
+          <button onClick={() => router.push("/")} className="underline text-link">
             Go home
           </button>
         </p>
@@ -99,11 +100,6 @@ export default function ResultsPage() {
     router.push("/setup");
   }
 
-  function sgColor(sg: number) {
-    if (sg > 0.15) return "text-primary";
-    if (sg < -0.15) return "text-danger";
-    return "text-subtle";
-  }
 
   return (
     <main className="min-h-screen bg-app text-app pb-12">
@@ -123,12 +119,12 @@ export default function ResultsPage() {
             {" · "}{TEE_LABELS[round.tee]} tees
           </p>
           <div className="text-7xl font-bold mb-2">{round.totalStrokes}</div>
-          <p className={`text-2xl font-semibold ${scoreToPar > 0 ? "text-danger" : scoreToPar < 0 ? "text-warning" : "text-primary"}`}>
+          <p className={`text-2xl font-semibold ${toParClass(scoreToPar)}`}>
             {scoreToPar === 0 ? "Even par" : scoreToPar > 0 ? `+${scoreToPar}` : scoreToPar}
           </p>
           <p className="text-subtle text-sm mt-1">Par {round.totalPar}</p>
           {typeof round.totalStrokesGained === "number" && (
-            <p className={`text-sm font-mono mt-2 ${sgColor(round.totalStrokesGained)}`}>
+            <p className={`text-sm font-mono mt-2 ${sgClass(round.totalStrokesGained)}`}>
               Total Strokes Gained: {round.totalStrokesGained > 0 ? "+" : ""}{round.totalStrokesGained.toFixed(2)}
             </p>
           )}
@@ -183,13 +179,13 @@ export default function ResultsPage() {
                     <span className="font-semibold w-8 text-left">{h.holeNumber}</span>
                     <span className="text-subtle w-10">Par {h.par}</span>
                     <span className="font-bold w-8 text-center">{h.strokes}</span>
-                    <span className={`w-10 text-center ${diff > 0 ? "text-danger" : diff < 0 ? "text-warning" : "text-primary"}`}>
+                    <span className={`w-10 text-center ${toParClass(diff)}`}>
                       {diff === 0 ? "E" : diff > 0 ? `+${diff}` : diff}
                     </span>
-                    <span className={`w-14 text-right text-xs font-mono ${sgColor(holeSG)}`}>
+                    <span className={`w-14 text-right text-xs font-mono ${sgClass(holeSG)}`}>
                       {holeSG > 0 ? "+" : ""}{holeSG.toFixed(2)}
                     </span>
-                    <span className="text-primary text-xs w-6 text-right">{expanded ? "▾" : "▸"}</span>
+                    <span className="text-link text-xs w-6 text-right">{expanded ? "▾" : "▸"}</span>
                   </button>
                   {expanded && (
                     <div className="bg-accent/50 px-4 py-3 space-y-1 text-xs">
@@ -216,7 +212,7 @@ export default function ResultsPage() {
                                   {s.offlineYards === 0 ? "—" : `${Math.abs(s.offlineYards)}y ${s.offlineYards > 0 ? "R" : "L"}`}
                                 </span>
                                 <span>{s.remainingYards}y</span>
-                                <span className={`text-right font-mono ${sgColor(s.strokesGained)}`}>
+                                <span className={`text-right font-mono ${sgClass(s.strokesGained)}`}>
                                   {s.strokesGained > 0 ? "+" : ""}{s.strokesGained.toFixed(2)}
                                 </span>
                               </div>
@@ -226,7 +222,7 @@ export default function ResultsPage() {
                             <span>Putts: {h.putts}</span>
                             <button
                               onClick={() => router.push(`/hole/${h.holeNumber}`)}
-                              className="text-primary underline"
+                              className="text-link underline"
                             >
                               Edit hole
                             </button>
@@ -243,7 +239,7 @@ export default function ResultsPage() {
 
         {/* Guests: offer to save this round by signing in / creating an account */}
         {!user && !saved && (
-          <div className="bg-card border-2 border-green-600 rounded-xl p-4 space-y-3">
+          <div className="bg-card border-2 border-primary rounded-xl p-4 space-y-3">
             <div>
               <h2 className="font-bold text-app">Save this round?</h2>
               <p className="text-subtle text-sm">
@@ -254,7 +250,7 @@ export default function ResultsPage() {
               <div className="flex gap-2">
                 <button
                   onClick={() => setGuestAuthMode("signup")}
-                  className="flex-1 py-3 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold text-sm"
+                  className="flex-1 py-3 rounded-xl bg-primary hover:bg-primary-hover text-on-primary font-bold text-sm"
                 >
                   Create account
                 </button>
@@ -285,7 +281,7 @@ export default function ResultsPage() {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white font-bold transition-colors"
+              className="w-full py-3 rounded-xl bg-primary hover:bg-primary-hover disabled:opacity-60 text-on-primary font-bold transition-colors"
             >
               {saving ? "Saving…" : "Save Round to My Profile"}
             </button>
@@ -299,11 +295,11 @@ export default function ResultsPage() {
             <p className="text-center text-subtle text-sm">Saving your round…</p>
           )}
           {saved && (
-            <p className="text-center text-primary font-semibold">Round saved!</p>
+            <p className="text-center text-link font-semibold">Round saved!</p>
           )}
           <button
             onClick={playAgain}
-            className="w-full py-3 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold transition-colors"
+            className="w-full py-3 rounded-xl bg-primary hover:bg-primary-hover text-on-primary font-bold transition-colors"
           >
             Play Again
           </button>

@@ -1,77 +1,99 @@
 {
-  "background": {
+  "ui": {
     "bg": {
-      "value": "#0b1a12",
+      "value": "#11150f",
       "type": "color",
-      "description": "Default background"
+      "description": "Page background"
     },
-    "bg-elevated": {
-      "value": "#112418",
+    "surface": {
+      "value": "#181d15",
       "type": "color",
-      "description": "Elevated surface (cards, modals)"
+      "description": "Cards, sheets, inputs"
     },
-    "bg-accent": {
-      "value": "#1a3224",
+    "sunken": {
+      "value": "#21271d",
       "type": "color",
-      "description": "Accent background"
-    }
-  },
-  "text": {
+      "description": "Secondary buttons, table headers, chips"
+    },
+    "border": {
+      "value": "#323a2c",
+      "type": "color",
+      "description": "Hairlines and card borders"
+    },
+    "border-strong": {
+      "value": "#4a5541",
+      "type": "color",
+      "description": "Input borders, unselected outlines"
+    },
     "text": {
-      "value": "#e6f4ea",
+      "value": "#eceee6",
       "type": "color",
       "description": "Primary text"
     },
     "text-muted": {
-      "value": "#9dbda7",
+      "value": "#b5bcaa",
       "type": "color",
-      "description": "Muted text"
+      "description": "Secondary text"
     },
     "text-subtle": {
-      "value": "#6b8c78",
+      "value": "#8d9583",
       "type": "color",
-      "description": "Subtle/placeholder text"
-    }
-  },
-  "brand": {
+      "description": "Captions, hints"
+    },
     "primary": {
-      "value": "#34d399",
+      "value": "#4f7f30",
       "type": "color",
-      "description": "Primary brand color"
+      "description": "Primary actions"
     },
     "primary-hover": {
-      "value": "#10b981",
+      "value": "#436c28",
       "type": "color",
-      "description": "Primary brand hover state"
+      "description": "Primary action hover/pressed"
     },
-    "accent": {
-      "value": "#4ade80",
+    "on-primary": {
+      "value": "#ffffff",
       "type": "color",
-      "description": "Accent brand color"
-    }
-  },
-  "semantic": {
-    "success": {
-      "value": "#34d399",
+      "description": "Text/icons on primary"
+    },
+    "primary-soft": {
+      "value": "#26331d",
       "type": "color",
-      "description": "Success state"
+      "description": "Selected-state tint"
+    },
+    "link": {
+      "value": "#a9d17c",
+      "type": "color",
+      "description": "Text links"
+    },
+    "score-under": {
+      "value": "#ff8a7a",
+      "type": "color",
+      "description": "Under par"
+    },
+    "score-over": {
+      "value": "#8cb8ef",
+      "type": "color",
+      "description": "Over par"
     },
     "danger": {
-      "value": "#f87171",
+      "value": "#ff8a7a",
       "type": "color",
-      "description": "Danger/error state"
+      "description": "Destructive actions, errors"
     },
     "warning": {
-      "value": "#fbbf24",
+      "value": "#f2b84b",
       "type": "color",
-      "description": "Warning state"
-    }
-  },
-  "border": {
-    "border": {
-      "value": "#25452f",
+      "description": "Warnings"
+    },
+    "success": {
+      "value": "#a9d17c",
       "type": "color",
-      "description": "Default border color"
+      "description": "Success / saved"
+    },
+    "focus": {
+      "value": "#8cb8ef",
+      "type": "color",
+      "description": "Keyboard focus ring"
     }
   }
 }

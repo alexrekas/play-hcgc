@@ -37,7 +37,7 @@ export default function LandingPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-app">
-        <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -93,7 +93,7 @@ export default function LandingPage() {
               </div>
               <button
                 onClick={() => router.push("/setup")}
-                className="w-full py-3 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold text-lg transition-colors"
+                className="w-full py-3 rounded-xl bg-primary hover:bg-primary-hover text-on-primary font-bold text-lg transition-colors"
               >
                 Start a Round
               </button>
@@ -122,7 +122,7 @@ export default function LandingPage() {
             <>
               <button
                 onClick={startGuestRound}
-                className="w-full py-4 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold text-xl shadow-lg transition-colors"
+                className="w-full py-4 rounded-xl bg-primary hover:bg-primary-hover text-on-primary font-bold text-xl shadow-lg transition-colors"
               >
                 Start a round
               </button>
@@ -139,13 +139,13 @@ export default function LandingPage() {
                     <div className="flex gap-2">
                       <button
                         onClick={() => setAuthMode("signin")}
-                        className="flex-1 py-2.5 rounded-xl border border-app bg-card text-app font-semibold text-sm hover:border-green-500 transition-colors"
+                        className="flex-1 py-2.5 rounded-xl border border-app bg-card text-app font-semibold text-sm hover:border-primary transition-colors"
                       >
                         Sign in
                       </button>
                       <button
                         onClick={() => setAuthMode("signup")}
-                        className="flex-1 py-2.5 rounded-xl border border-app bg-card text-app font-semibold text-sm hover:border-green-500 transition-colors"
+                        className="flex-1 py-2.5 rounded-xl border border-app bg-card text-app font-semibold text-sm hover:border-primary transition-colors"
                       >
                         Create account
                       </button>

@@ -58,6 +58,9 @@ export interface BuildShotInput {
   canvasAspect?: number;
   /** Optional override for remaining distance (useful for water drops / OB relief) */
   remainingOverride?: number;
+  /** Where the ball came down (normalized map coords). When given, it is
+   *  recorded as-is instead of projecting from aim + distance. */
+  landing?: { x: number; y: number };
 }
 
 export function buildShotResult(input: BuildShotInput): ShotResult {
@@ -68,11 +71,15 @@ export function buildShotResult(input: BuildShotInput): ShotResult {
     resultLie: inputLie, shotShape, holeOut = false,
     canvasAspect = 2.5,
     remainingOverride,
+    landing,
   } = input;
 
-  const { x, y, rawY } = computeNewPosition(
+  const projected = computeNewPosition(
     prevX, prevY, aimAngleDeg, distanceYards, holeLengthYards, canvasAspect
   );
+  const x = landing ? landing.x : projected.x;
+  const y = landing ? landing.y : projected.y;
+  const rawY = projected.rawY;
 
   // If the shot holed out we force the lie to "green" regardless of input.
   const resultLie: LieType = holeOut ? "green" : inputLie;

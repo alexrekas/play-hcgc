@@ -15,12 +15,24 @@ export function scoreName(strokes: number, par: number): string {
   return "Other";
 }
 
+// Score colours follow scorecard convention: under par in golf-red, over par
+// in scoreboard navy, even par in plain ink. All from the palette tokens.
+export function toParClass(diff: number): string {
+  if (diff < 0) return "text-score-under";
+  if (diff > 0) return "text-score-over";
+  return "text-ink";
+}
+
 // Tailwind classes for a score name, used wherever we render them.
 export function scoreNameClass(strokes: number, par: number): string {
-  const diff = strokes - par;
-  if (strokes === 1) return "text-emerald-500 dark:text-emerald-300";
-  if (diff < 0) return "text-warning";
-  if (diff === 0) return "text-primary";
-  if (diff > 0) return "text-danger";
+  if (strokes <= 0) return "text-subtle";
+  if (strokes === 1) return "text-score-under";
+  return toParClass(strokes - par);
+}
+
+// Strokes gained: positive is good (green), negative costs you (amber).
+export function sgClass(sg: number): string {
+  if (sg > 0.15) return "text-success";
+  if (sg < -0.15) return "text-warning";
   return "text-subtle";
 }

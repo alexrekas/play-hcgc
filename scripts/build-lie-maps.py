@@ -106,29 +106,51 @@ def build_grid(data):
 
 def resolve(grid, green_xy):
     H, W = len(grid), len(grid[0])
-    # 1) Light-green patches: the one at the flag is the green, the rest are
-    #    tee boxes, which play like fairway.
+    # 1) Light-green patches. The putting green is the one ringed by fringe
+    #    (the green always has a fringe); every other light-green patch is a
+    #    tee box, which plays like fairway. Fallback if no patch touches
+    #    fringe: the patch nearest the flag.
     gx = min(W - 1, int(green_xy[0] * W))
     gy = min(H - 1, int((1 - green_xy[1]) * H))
     seen = [[False] * W for _ in range(H)]
+    comps = []
     for y in range(H):
         for x in range(W):
             if grid[y][x] != "g" or seen[y][x]:
                 continue
             comp, q = [], deque([(x, y)])
             seen[y][x] = True
+            edge = ringed = 0
             while q:
                 cx, cy = q.popleft()
                 comp.append((cx, cy))
+                outside = []
                 for nx, ny in ((cx + 1, cy), (cx - 1, cy), (cx, cy + 1), (cx, cy - 1)):
-                    if 0 <= nx < W and 0 <= ny < H and not seen[ny][nx] and grid[ny][nx] in ("g", "n"):
-                        seen[ny][nx] = True
-                        q.append((nx, ny))
-            near_flag = any(abs(cx - gx) <= 8 and abs(cy - gy) <= 8 for cx, cy in comp)
-            if not near_flag:
-                for cx, cy in comp:
-                    if grid[cy][cx] == "g":
-                        grid[cy][cx] = "t"
+                    if not (0 <= nx < W and 0 <= ny < H):
+                        outside.append("o")
+                        continue
+                    if grid[ny][nx] in ("g", "n"):
+                        if not seen[ny][nx]:
+                            seen[ny][nx] = True
+                            q.append((nx, ny))
+                    else:
+                        outside.append(grid[ny][nx])
+                if outside:
+                    edge += 1
+                    ringed += all(t == "e" for t in outside)
+            # A real green is ringed by fringe almost all the way round; a tee
+            # box only picks up "fringe" from anti-aliased edges here and there.
+            ringed_by_fringe = edge > 0 and ringed / edge >= 0.7
+            near_flag = min(abs(cx - gx) + abs(cy - gy) for cx, cy in comp)
+            comps.append((comp, ringed_by_fringe, near_flag))
+    greens = [c for c in comps if c[1]] or sorted(comps, key=lambda c: c[2])[:1]
+    green_ids = {id(c) for c in greens}
+    for c in comps:
+        if id(c) in green_ids:
+            continue
+        for cx, cy in c[0]:
+            if grid[cy][cx] == "g":
+                grid[cy][cx] = "t"
     for y in range(H):
         for x in range(W):
             if grid[y][x] == "t":

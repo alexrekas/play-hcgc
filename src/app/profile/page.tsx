@@ -242,7 +242,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-app">
-        <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -252,7 +252,7 @@ export default function ProfilePage() {
       <div className="min-h-screen flex items-center justify-center bg-app px-4">
         <div className="text-center space-y-4">
           <p className="text-muted">Sign in to manage your profile and bag.</p>
-          <button onClick={() => router.push("/")} className="text-primary underline">
+          <button onClick={() => router.push("/")} className="text-link underline">
             Sign in
           </button>
         </div>
@@ -268,7 +268,7 @@ export default function ProfilePage() {
   return (
     <main className="min-h-screen bg-app text-app pb-16">
       <div className="bg-card border-b border-app px-4 py-4 flex items-center justify-between gap-3">
-        <button onClick={() => router.push("/")} className="text-primary text-sm font-semibold">
+        <button onClick={() => router.push("/")} className="text-link text-sm font-semibold">
           ← Home
         </button>
         <h1 className="font-bold text-lg">Profile &amp; Bag</h1>
@@ -298,7 +298,7 @@ export default function ProfilePage() {
                   key={g}
                   onClick={() => { setGender(g); setSavedAt(null); }}
                   className={`flex-1 px-3 py-2 rounded-lg text-sm font-semibold capitalize transition-colors ${
-                    gender === g ? "bg-green-600 text-white" : "bg-accent text-muted border border-app"
+                    gender === g ? "bg-primary text-on-primary" : "bg-accent text-muted border border-app"
                   }`}
                 >
                   {g}
@@ -314,7 +314,7 @@ export default function ProfilePage() {
                   key={d}
                   onClick={() => { setDexterity(d); setSavedAt(null); }}
                   className={`flex-1 px-3 py-2 rounded-lg text-sm font-semibold capitalize transition-colors ${
-                    dexterity === d ? "bg-green-600 text-white" : "bg-accent text-muted border border-app"
+                    dexterity === d ? "bg-primary text-on-primary" : "bg-accent text-muted border border-app"
                   }`}
                 >
                   {d}-handed
@@ -345,7 +345,7 @@ export default function ProfilePage() {
                       key={t}
                       onClick={() => setTeeForCH(t)}
                       className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-colors ${
-                        t === teeForCH ? "bg-green-600 text-white" : "bg-accent text-muted border border-app"
+                        t === teeForCH ? "bg-primary text-on-primary" : "bg-accent text-muted border border-app"
                       }`}
                     >
                       {TEE_LABELS[t]}
@@ -385,7 +385,7 @@ export default function ProfilePage() {
                 <h3 className="text-app font-semibold text-sm">{CATEGORY_LABELS[cat]}</h3>
                 {cat !== "putter" && (
                   <div className="flex gap-2 text-xs">
-                    <button onClick={() => selectAll(cat)} className="text-primary hover:underline">
+                    <button onClick={() => selectAll(cat)} className="text-link hover:underline">
                       Select all
                     </button>
                     <span className="text-subtle">·</span>
@@ -404,13 +404,13 @@ export default function ProfilePage() {
                       onClick={() => toggleClub(c.id)}
                       className={`rounded-lg px-2 py-2 text-left border-2 transition-all ${
                         on
-                          ? "border-green-500 bg-accent"
-                          : "border-app bg-card hover:border-green-400"
+                          ? "border-primary bg-accent"
+                          : "border-app bg-card hover:border-primary"
                       }`}
                     >
                       <div className="flex items-center justify-between">
                         <span className="font-semibold text-app text-sm">{c.shortName}</span>
-                        {on && <span className="text-green-500 text-xs">✓</span>}
+                        {on && <span className="text-success text-xs">✓</span>}
                       </div>
                       <p className="text-subtle text-[11px] leading-tight">{c.name}</p>
                     </button>
@@ -440,7 +440,7 @@ export default function ProfilePage() {
               <button
                 onClick={autoCalcAverages}
                 disabled={rounds.length === 0}
-                className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white"
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-primary hover:bg-primary-hover disabled:opacity-50 text-on-primary"
                 title="Calculate averages from your recorded shot history"
               >
                 Auto-calc from my shots
@@ -491,7 +491,7 @@ export default function ProfilePage() {
                           autoFocus
                           className="w-20 bg-app border border-app rounded-lg px-2 py-1 text-right font-mono"
                         />
-                        <button onClick={commitEditAverage} className="text-primary text-sm font-semibold">Save</button>
+                        <button onClick={commitEditAverage} className="text-link text-sm font-semibold">Save</button>
                         <button onClick={cancelEditAverage} className="text-subtle text-sm">Cancel</button>
                       </>
                     ) : (
@@ -543,7 +543,7 @@ export default function ProfilePage() {
                   key={a.id}
                   className={`rounded-lg p-3 border text-left transition-opacity ${
                     got
-                      ? "border-green-500 bg-accent"
+                      ? "border-primary bg-accent"
                       : "border-app bg-card opacity-50"
                   }`}
                   title={a.description}
@@ -573,7 +573,7 @@ export default function ProfilePage() {
             </div>
             <button
               onClick={() => { resetPwForm(); setPwModalOpen(true); }}
-              className="w-full py-2 rounded-lg bg-accent text-app font-semibold border border-app hover:border-green-500 transition-colors"
+              className="w-full py-2 rounded-lg bg-accent text-app font-semibold border border-app hover:border-primary transition-colors"
             >
               Change Password
             </button>
@@ -586,12 +586,12 @@ export default function ProfilePage() {
             <button
               onClick={save}
               disabled={saving}
-              className="flex-1 py-3 rounded-xl bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-bold transition-colors"
+              className="flex-1 py-3 rounded-xl bg-primary hover:bg-primary-hover disabled:opacity-60 text-on-primary font-bold transition-colors"
             >
               {saving ? "Saving…" : "Save Profile"}
             </button>
             {savedAt && !saving && !saveError && (
-              <span className="text-primary text-xs font-semibold">Saved ✓</span>
+              <span className="text-link text-xs font-semibold">Saved ✓</span>
             )}
           </div>
           {saveError && (
@@ -620,7 +620,7 @@ export default function ProfilePage() {
               value={currentPw}
               onChange={(e) => setCurrentPw(e.target.value)}
               required
-              className="w-full bg-accent text-app border border-app rounded-lg px-3 py-2 focus:outline-none focus:border-green-500"
+              className="w-full bg-accent text-app border border-app rounded-lg px-3 py-2 focus:outline-none focus:border-primary"
             />
             <input
               type="password"
@@ -630,7 +630,7 @@ export default function ProfilePage() {
               onChange={(e) => setNewPw(e.target.value)}
               required
               minLength={6}
-              className="w-full bg-accent text-app border border-app rounded-lg px-3 py-2 focus:outline-none focus:border-green-500"
+              className="w-full bg-accent text-app border border-app rounded-lg px-3 py-2 focus:outline-none focus:border-primary"
             />
             <input
               type="password"
@@ -640,7 +640,7 @@ export default function ProfilePage() {
               onChange={(e) => setConfirmPw(e.target.value)}
               required
               minLength={6}
-              className="w-full bg-accent text-app border border-app rounded-lg px-3 py-2 focus:outline-none focus:border-green-500"
+              className="w-full bg-accent text-app border border-app rounded-lg px-3 py-2 focus:outline-none focus:border-primary"
             />
             {pwErr && (
               <p className="text-danger text-sm font-semibold">{pwErr}</p>
@@ -660,7 +660,7 @@ export default function ProfilePage() {
               <button
                 type="submit"
                 disabled={pwBusy || pwSuccess}
-                className="flex-1 py-3 rounded-xl bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-bold"
+                className="flex-1 py-3 rounded-xl bg-primary hover:bg-primary-hover disabled:opacity-60 text-on-primary font-bold"
               >
                 {pwBusy ? "Updating…" : pwSuccess ? "Done" : "Update Password"}
               </button>

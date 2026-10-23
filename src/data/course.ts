@@ -158,11 +158,12 @@ export const COURSE: CourseInfo = {
   ],
 };
 
+// Tee swatches come from the palette tokens (tokens/global.json → tee.*).
 export const TEE_COLORS: Record<TeeName, string> = {
-  diamond: "#a78bfa",   // purple-violet for the fictional tips
-  black:   "#1a1a1a",
-  blue:    "#1d4ed8",
-  white:   "#e5e7eb",
+  diamond: "var(--tee-diamond)",
+  black:   "var(--tee-black)",
+  blue:    "var(--tee-blue)",
+  white:   "var(--tee-white)",
 };
 
 export const TEE_LABELS: Record<TeeName, string> = {

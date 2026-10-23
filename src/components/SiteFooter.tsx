@@ -4,7 +4,7 @@ export const UNOFFICIAL_NOTE =
 // Shared footer for the non-play screens: the unofficial disclaimer plus the
 // course's real booking / directions / phone links as plain secondary links.
 export default function SiteFooter() {
-  const link = "text-primary hover:underline";
+  const link = "text-link hover:underline";
   return (
     <footer className="mt-12 px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] text-center space-y-2">
       <p className="text-subtle text-xs">

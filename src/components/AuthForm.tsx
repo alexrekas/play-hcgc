@@ -63,7 +63,7 @@ export default function AuthForm({
   }
 
   const input =
-    "w-full bg-card border border-app rounded-xl px-4 py-3 text-app placeholder:text-subtle focus:outline-none focus:border-green-500";
+    "w-full bg-card border border-app rounded-xl px-4 py-3 text-app placeholder:text-subtle focus:outline-none focus:border-primary";
 
   return (
     <div className="space-y-3">
@@ -74,7 +74,7 @@ export default function AuthForm({
             type="button"
             onClick={() => { onModeChange(m); setErr(null); }}
             className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${
-              mode === m ? "bg-green-600 text-white" : "text-subtle"
+              mode === m ? "bg-primary text-on-primary" : "text-subtle"
             }`}
           >
             {m === "signin" ? "Sign In" : "Create Account"}
@@ -103,7 +103,7 @@ export default function AuthForm({
                     key={g}
                     onClick={() => setGender(g)}
                     className={`flex-1 py-2 rounded-lg font-semibold text-sm capitalize transition-colors ${
-                      gender === g ? "bg-green-600 text-white" : "bg-accent text-muted"
+                      gender === g ? "bg-primary text-on-primary" : "bg-accent text-muted"
                     }`}
                   >
                     {g}
@@ -135,7 +135,7 @@ export default function AuthForm({
         <button
           type="submit"
           disabled={busy}
-          className="w-full py-3 rounded-xl bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white font-bold transition-colors"
+          className="w-full py-3 rounded-xl bg-primary hover:bg-primary-hover disabled:opacity-60 text-on-primary font-bold transition-colors"
         >
           {busy ? "Loading…" : mode === "signup" ? "Create Account" : "Sign In"}
         </button>

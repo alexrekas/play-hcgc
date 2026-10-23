@@ -10,6 +10,7 @@ import { courseHandicap } from "@/lib/handicap";
 import type { Round, HandicapRecord } from "@/types";
 import SiteFooter from "@/components/SiteFooter";
 import ThemeToggle from "@/components/ThemeToggle";
+import { toParClass, sgClass } from "@/lib/scoring";
 
 export default function HistoryPage() {
   const router = useRouter();
@@ -32,7 +33,7 @@ export default function HistoryPage() {
   if (loading || fetching) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-app">
-        <div className="w-8 h-8 border-4 border-green-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -42,7 +43,7 @@ export default function HistoryPage() {
       <div className="min-h-screen flex items-center justify-center bg-app px-4">
         <div className="text-center space-y-4">
           <p className="text-muted">Sign in to view your round history and handicap.</p>
-          <button onClick={() => router.push("/")} className="text-primary underline">
+          <button onClick={() => router.push("/")} className="text-link underline">
             Sign in
           </button>
         </div>
@@ -55,7 +56,7 @@ export default function HistoryPage() {
     return (
       <main className="min-h-screen bg-app text-app">
         <div className="bg-card border-b border-app px-4 py-4 flex items-center justify-between gap-3">
-          <button onClick={() => router.push("/")} className="text-primary text-sm font-semibold">← Home</button>
+          <button onClick={() => router.push("/")} className="text-link text-sm font-semibold">← Home</button>
           <h1 className="font-bold text-lg">My Rounds &amp; Handicap</h1>
           <ThemeToggle />
         </div>
@@ -69,7 +70,7 @@ export default function HistoryPage() {
           </div>
           <button
             onClick={() => router.push("/setup")}
-            className="w-full max-w-xs py-3 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold transition-colors"
+            className="w-full max-w-xs py-3 rounded-xl bg-primary hover:bg-primary-hover text-on-primary font-bold transition-colors"
           >
             Start a Round
           </button>
@@ -89,7 +90,7 @@ export default function HistoryPage() {
   return (
     <main className="min-h-screen bg-app text-app pb-12">
       <div className="bg-card border-b border-app px-4 py-4 flex items-center justify-between gap-3">
-        <button onClick={() => router.push("/")} className="text-primary text-sm font-semibold">← Home</button>
+        <button onClick={() => router.push("/")} className="text-link text-sm font-semibold">← Home</button>
         <h1 className="font-bold text-lg">My Rounds &amp; Handicap</h1>
         <ThemeToggle />
       </div>
@@ -117,7 +118,7 @@ export default function HistoryPage() {
                       key={t}
                       onClick={() => setTeeForCH(t)}
                       className={`px-3 py-1 rounded-lg text-xs font-semibold transition-colors ${
-                        t === teeForCH ? "bg-green-600 text-white" : "bg-accent text-muted border border-app"
+                        t === teeForCH ? "bg-primary text-on-primary" : "bg-accent text-muted border border-app"
                       }`}
                     >
                       {TEE_LABELS[t]}
@@ -177,7 +178,7 @@ export default function HistoryPage() {
                     </div>
                     <div className="text-right">
                       <p className="font-bold text-2xl">{r.totalStrokes}</p>
-                      <p className={`text-sm ${scoreToPar > 0 ? "text-danger" : scoreToPar < 0 ? "text-warning" : "text-primary"}`}>
+                      <p className={`text-sm ${toParClass(scoreToPar)}`}>
                         {scoreToPar === 0 ? "E" : scoreToPar > 0 ? `+${scoreToPar}` : scoreToPar}
                       </p>
                     </div>
@@ -185,7 +186,7 @@ export default function HistoryPage() {
                   <div className="mt-2 pt-2 border-t border-app flex justify-between text-xs text-subtle">
                     <span>Differential: {diff.toFixed(1)}</span>
                     {typeof r.totalStrokesGained === "number" && (
-                      <span className={r.totalStrokesGained > 0 ? "text-primary" : r.totalStrokesGained < 0 ? "text-danger" : ""}>
+                      <span className={sgClass(r.totalStrokesGained)}>
                         SG: {r.totalStrokesGained > 0 ? "+" : ""}{r.totalStrokesGained.toFixed(1)}
                       </span>
                     )}
@@ -199,7 +200,7 @@ export default function HistoryPage() {
 
         <button
           onClick={() => router.push("/setup")}
-          className="w-full py-3 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold transition-colors"
+          className="w-full py-3 rounded-xl bg-primary hover:bg-primary-hover text-on-primary font-bold transition-colors"
         >
           Start New Round
         </button>
