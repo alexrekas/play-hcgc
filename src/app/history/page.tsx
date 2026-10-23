@@ -9,7 +9,6 @@ import { COURSE, TEE_LABELS, type TeeName } from "@/data/course";
 import { courseHandicap } from "@/lib/handicap";
 import type { Round, HandicapRecord } from "@/types";
 import SiteFooter from "@/components/SiteFooter";
-import ThemeToggle from "@/components/ThemeToggle";
 import { toParClass, sgClass } from "@/lib/scoring";
 
 export default function HistoryPage() {
@@ -58,7 +57,6 @@ export default function HistoryPage() {
         <div className="bg-card border-b border-app px-4 py-4 flex items-center justify-between gap-3">
           <button onClick={() => router.push("/")} className="text-link text-sm font-semibold">← Home</button>
           <h1 className="font-bold text-lg">My Rounds &amp; Handicap</h1>
-          <ThemeToggle />
         </div>
         <div className="max-w-lg mx-auto px-4 mt-16 text-center space-y-6">
           <div className="text-6xl">⛳</div>
@@ -92,7 +90,6 @@ export default function HistoryPage() {
       <div className="bg-card border-b border-app px-4 py-4 flex items-center justify-between gap-3">
         <button onClick={() => router.push("/")} className="text-link text-sm font-semibold">← Home</button>
         <h1 className="font-bold text-lg">My Rounds &amp; Handicap</h1>
-        <ThemeToggle />
       </div>
 
       <div className="max-w-lg mx-auto px-4 mt-6 space-y-6">

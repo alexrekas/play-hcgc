@@ -25,7 +25,6 @@ import type { HandicapRecord, Round, Dexterity } from "@/types";
 import { clubStatsFromRounds, buildClubAverages } from "@/lib/clubStats";
 import { ACHIEVEMENTS, computeEarnedAchievements, type Achievement } from "@/lib/achievements";
 import SiteFooter from "@/components/SiteFooter";
-import ThemeToggle from "@/components/ThemeToggle";
 
 const MAX_CLUBS = 14;
 
@@ -272,7 +271,6 @@ export default function ProfilePage() {
           ← Home
         </button>
         <h1 className="font-bold text-lg">Profile &amp; Bag</h1>
-        <ThemeToggle />
       </div>
 
       <div className="max-w-2xl mx-auto px-4 mt-6 space-y-6">

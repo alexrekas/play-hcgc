@@ -2,6 +2,7 @@
 import { useRef, useEffect, useCallback, useState } from "react";
 import type { Hole } from "@/data/course";
 import type { ShotResult } from "@/types";
+import type { DropZone } from "@/lib/relief";
 import { HOLE_LAYOUTS, CANVAS_W, CANVAS_H } from "@/data/holeLayouts";
 import { HOLE_SVG_LAYOUTS } from "@/data/holeSvgLayouts";
 
@@ -23,6 +24,10 @@ interface Props {
   targetDistanceYards?: number | null;
   /** Optional yards-to-landing label drawn next to the landing marker. */
   landingDistanceYards?: number | null;
+  /** Where a penalty drop is allowed (line or circle), shown while choosing a drop. */
+  dropZone?: DropZone | null;
+  /** The drop spot the player has chosen inside dropZone. */
+  dropSpot?: { x: number; y: number } | null;
 }
 
 const MAX_ZOOM = 3;
@@ -32,6 +37,7 @@ const ZOOM_STEP = 0.5;
 export default function HoleDiagram({
   hole, shots, currentPos, teePos, target, landing = null, onTargetChange,
   fill = false, targetDistanceYards = null, landingDistanceYards = null,
+  dropZone = null, dropSpot = null,
 }: Props) {
   const layout    = HOLE_LAYOUTS[hole.number];
   const svgLayout = HOLE_SVG_LAYOUTS[hole.number];
@@ -236,16 +242,26 @@ export default function HoleDiagram({
           </>
         )}
 
-        {/* Trail through all completed shots */}
+        {/* Trail through all completed shots. After a penalty the trail jumps
+            from where the ball went in to where play continued (dotted red). */}
         {shots.length > 0 && (() => {
-          const pts: Array<[number, number]> = [
-            [teeX, teeY],
-            ...shots.map<[number, number]>((s) => [s.posX * CANVAS_W, (1 - s.posY) * CANVAS_H]),
-          ];
-          let d = `M ${pts[0][0]},${pts[0][1]}`;
-          for (let i = 1; i < pts.length; i++) d += ` L ${pts[i][0]},${pts[i][1]}`;
-          return <path d={d} stroke="var(--map-shot)" strokeWidth={1.2} fill="none"
-                       strokeDasharray="2 3" opacity={0.85} />;
+          const P = (x: number, y: number) => `${x * CANVAS_W},${(1 - y) * CANVAS_H}`;
+          let d = `M ${teeX},${teeY}`;
+          let pen = "";
+          for (const s of shots) {
+            d += ` L ${P(s.posX, s.posY)}`;
+            if (s.relief) {
+              pen += ` M ${P(s.posX, s.posY)} L ${P(s.relief.posX, s.relief.posY)}`;
+              d += ` M ${P(s.relief.posX, s.relief.posY)}`;
+            }
+          }
+          return (
+            <>
+              <path d={d} stroke="var(--map-shot)" strokeWidth={1.2} fill="none"
+                    strokeDasharray="2 3" opacity={0.85} />
+              {pen && <path d={pen} stroke="var(--ui-danger)" strokeWidth={1.2} fill="none" strokeDasharray="1 2" />}
+            </>
+          );
         })()}
 
         {shots.map((s, i) => {
@@ -253,12 +269,44 @@ export default function HoleDiagram({
           const sy = (1 - s.posY) * CANVAS_H;
           return (
             <g key={i}>
-              <circle cx={sx} cy={sy} r={5} fill="var(--map-shot)" stroke="var(--map-ink)" strokeWidth={1} />
-              <text x={sx} y={sy + 2.5} fill="var(--map-ink)" fontSize={7}
+              <circle cx={sx} cy={sy} r={5} fill={s.penaltyStrokes ? "var(--ui-danger)" : "var(--map-shot)"} stroke="var(--map-ink)" strokeWidth={1} />
+              <text x={sx} y={sy + 2.5} fill={s.penaltyStrokes ? "var(--map-ball)" : "var(--map-ink)"} fontSize={7}
                     fontWeight="bold" textAnchor="middle">{i + 1}</text>
             </g>
           );
         })}
+
+        {/* Allowed drop area + chosen drop spot */}
+        {dropZone && dropZone.kind === "line" && (
+          <g>
+            <line
+              x1={dropZone.a.x * CANVAS_W} y1={(1 - dropZone.a.y) * CANVAS_H}
+              x2={dropZone.b.x * CANVAS_W} y2={(1 - dropZone.b.y) * CANVAS_H}
+              stroke="var(--map-ball)" strokeWidth={5} strokeLinecap="round" opacity={0.55}
+            />
+            <line
+              x1={dropZone.a.x * CANVAS_W} y1={(1 - dropZone.a.y) * CANVAS_H}
+              x2={dropZone.b.x * CANVAS_W} y2={(1 - dropZone.b.y) * CANVAS_H}
+              stroke="var(--map-aim)" strokeWidth={1.6} strokeDasharray="4 3" strokeLinecap="round"
+            />
+          </g>
+        )}
+        {dropZone && dropZone.kind === "circle" && (
+          <circle
+            cx={dropZone.c.x * CANVAS_W} cy={(1 - dropZone.c.y) * CANVAS_H}
+            r={Math.max(dropZone.r, 6)}
+            fill="var(--map-ball)" fillOpacity={0.35}
+            stroke="var(--map-aim)" strokeWidth={1.4} strokeDasharray="3 2"
+          />
+        )}
+        {dropSpot && (
+          <g>
+            <circle cx={dropSpot.x * CANVAS_W} cy={(1 - dropSpot.y) * CANVAS_H} r={6}
+                    fill="var(--map-ball)" stroke="var(--map-aim)" strokeWidth={2} />
+            <text x={dropSpot.x * CANVAS_W} y={(1 - dropSpot.y) * CANVAS_H + 2.5} fill="var(--map-aim)"
+                  fontSize={7} fontWeight="bold" textAnchor="middle">D</text>
+          </g>
+        )}
 
         {/* Current ball */}
         <circle cx={origin.sx} cy={origin.sy} r={8}

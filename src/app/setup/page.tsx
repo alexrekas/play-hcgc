@@ -7,7 +7,6 @@ import { useAuth } from "@/lib/authContext";
 import { useProfile } from "@/lib/profileContext";
 import { COURSE, TEE_COLORS, TEE_LABELS, type TeeName } from "@/data/course";
 import SiteFooter from "@/components/SiteFooter";
-import ThemeToggle from "@/components/ThemeToggle";
 
 const TEE_NAMES: TeeName[] = ["diamond", "black", "blue", "white"];
 
@@ -38,14 +37,12 @@ export default function SetupPage() {
           ← Back
         </button>
         <h1 className="text-lg font-bold flex-1">Course Setup</h1>
-        <ThemeToggle />
       </div>
 
       <div className="max-w-2xl mx-auto px-4 mt-6 space-y-6">
         {profile && (
           <div className="bg-card border border-app rounded-xl p-3 text-sm text-subtle text-center">
             Playing as <span className="text-app font-semibold">{profile.displayName}</span>
-            <span className="capitalize"> · {profile.gender}</span>
           </div>
         )}
 

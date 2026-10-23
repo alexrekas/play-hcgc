@@ -42,6 +42,25 @@ export interface ShotResult {
   posY: number;                   // canvas y (0-1)
   remainingYards: number;         // distance to pin after this shot
   strokesGained: number;
+  /** Penalty strokes this shot incurred (water / out of bounds). Absent = 0. */
+  penaltyStrokes?: number;
+  /** Where play continues after a penalty: a drop or a re-hit spot. When
+   *  present, the next shot starts here instead of at posX/posY. */
+  relief?: ShotRelief;
+}
+
+export type ReliefOption =
+  | "rehit"          // stroke and distance: replay from where the last shot was played
+  | "back-on-line"   // water: drop on the flag→entry line, any distance back
+  | "lateral"        // water (red stakes): drop within two club-lengths of where it crossed
+  | "ob-drop";       // OB local rule E-5: drop near where it went out, +2
+
+export interface ShotRelief {
+  option: ReliefOption;
+  posX: number;
+  posY: number;
+  lie: LieType;
+  remainingYards: number;
 }
 
 export interface HoleScore {

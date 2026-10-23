@@ -39,7 +39,7 @@ export function pinPosition(hole: number): Pt | null {
 }
 
 /** Yards per canvas unit for this hole when played from `tee`. */
-function yardsPerUnit(hole: number, tee: TeeName): number | null {
+export function yardsPerUnit(hole: number, tee: TeeName): number | null {
   const g = HOLE_GEOMETRY[hole];
   const yards = COURSE.holes.find((h) => h.number === hole)?.tees[tee];
   if (!g || !yards) return null;
@@ -62,4 +62,9 @@ export function yardsToPin(hole: number, tee: TeeName, p: Pt): number | null {
 /** Aim direction from `from` to `to`, in degrees relative to straight up the map (+ = right). */
 export function aimAngleDeg(from: Pt, to: Pt): number {
   return Math.atan2((to.x - from.x) * CANVAS_W, (to.y - from.y) * CANVAS_H) * (180 / Math.PI);
+}
+
+/** Distance between two normalized points in canvas units. */
+export function canvasDistance(a: Pt, b: Pt): number {
+  return canvasDist(a, b);
 }

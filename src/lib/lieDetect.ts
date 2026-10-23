@@ -8,6 +8,7 @@ import { LIE_MAPS, LIE_GRID_W, LIE_GRID_H } from "@/data/lieMaps";
 const CODE_TO_LIE: Record<string, LieType> = {
   r: "rough",
   f: "fairway",
+  t: "fairway",   // tee box — plays like fairway
   g: "green",
   e: "fringe",
   s: "bunker",
@@ -43,4 +44,13 @@ export function detectLie(hole: number, pos: { x: number; y: number } | null): L
   const gx = Math.min(LIE_GRID_W - 1, Math.max(0, Math.floor(pos.x * LIE_GRID_W)));
   const gy = Math.min(LIE_GRID_H - 1, Math.max(0, Math.floor((1 - pos.y) * LIE_GRID_H)));
   return CODE_TO_LIE[g[gy * LIE_GRID_W + gx]] ?? null;
+}
+
+/** True if the point is on a tee box (which otherwise reads as fairway). */
+export function isTeeBox(hole: number, pos: { x: number; y: number }): boolean {
+  const g = grid(hole);
+  if (!g) return false;
+  const gx = Math.min(LIE_GRID_W - 1, Math.max(0, Math.floor(pos.x * LIE_GRID_W)));
+  const gy = Math.min(LIE_GRID_H - 1, Math.max(0, Math.floor((1 - pos.y) * LIE_GRID_H)));
+  return g[gy * LIE_GRID_W + gx] === "t";
 }

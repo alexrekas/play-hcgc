@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { useGameStore } from "@/store/gameStore";
 import { COURSE, TEE_LABELS } from "@/data/course";
 import SiteFooter from "@/components/SiteFooter";
-import ThemeToggle from "@/components/ThemeToggle";
 import { toParClass, sgClass } from "@/lib/scoring";
 
 // Scorecard marks, as on a paper card: circle = birdie, double circle =
@@ -99,7 +98,6 @@ export default function ScorecardPage() {
         <h1 className="font-bold">Scorecard</h1>
         <div className="flex items-center gap-2">
           <span className="text-subtle text-sm">{TEE_LABELS[round.tee]}</span>
-          <ThemeToggle />
         </div>
       </div>
 

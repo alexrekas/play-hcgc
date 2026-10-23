@@ -8,12 +8,13 @@ import { COURSE } from "@/data/course";
 import HoleDiagram from "@/components/HoleDiagram";
 import { buildShotResult } from "@/lib/shotEngine";
 import { CLUBS, suggestClub, getClubById, CLUBS_BY_CATEGORY, effectiveAvgYards } from "@/data/clubs";
-import type { LieType } from "@/types";
-import ThemeToggle from "@/components/ThemeToggle";
+import type { LieType, ReliefOption, ShotResult } from "@/types";
 import { scoreName, scoreNameClass, toParClass } from "@/lib/scoring";
 import { HOLE_SVG_LAYOUTS } from "@/data/holeSvgLayouts";
 import { detectLie } from "@/lib/lieDetect";
-import { teePosition, yardsBetween, yardsToPin, aimAngleDeg as aimBetween } from "@/lib/holeGeometry";
+import { teePosition, yardsBetween, yardsToPin, aimAngleDeg as aimBetween, hasGeometry } from "@/lib/holeGeometry";
+import { planRelief, lieAtDrop, reliefOptionsFor, RELIEF_LABELS, RELIEF_PENALTY } from "@/lib/relief";
+import { strokesGained } from "@/lib/strokesGained";
 
 const LIE_LABELS: Record<LieType, string> = {
   tee: "Tee Box",
@@ -102,10 +103,13 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
   const teeStart =
     (round && teePosition(holeNum, round.tee)) ??
     HOLE_SVG_LAYOUTS[holeNum]?.tee ?? { x: 0.5, y: 0.03 };
+  // After a penalty the next shot starts from the drop / re-hit spot.
   const currentPos = lastShot
-    ? { x: lastShot.posX, y: lastShot.posY }
+    ? (lastShot.relief
+        ? { x: lastShot.relief.posX, y: lastShot.relief.posY }
+        : { x: lastShot.posX, y: lastShot.posY })
     : teeStart;
-  const currentLie: LieType = lastShot ? lastShot.resultLie : "tee";
+  const currentLie: LieType = lastShot ? (lastShot.relief?.lie ?? lastShot.resultLie) : "tee";
   const shotCount = shots.length + 1;
 
   // Aim target — set during "input" mode.
@@ -129,13 +133,44 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
   // detected from the map under the landing marker.
   const [lieOverride, setLieOverride] = useState<LieType | null>(null);
 
+  // Penalty relief (ball in water / out of bounds). Holds the shot that went
+  // in until the player picks how to continue and, for a drop, where.
+  const [relief, setRelief] = useState<null | {
+    draft: ShotResult;
+    hazard: "water" | "ob";
+    from: { x: number; y: number };
+    fromLie: LieType;
+    fromRemaining: number;
+    landing: { x: number; y: number };
+    pendingBefore: { clubId: string; distance: number; aim: number };
+    option: ReliefOption | null;
+    spot: { x: number; y: number } | null;
+  }>(null);
+
+  const reliefPlan = useMemo(() => {
+    if (!relief?.option || !round) return null;
+    return planRelief({
+      hole: holeNum, tee: round.tee, option: relief.option,
+      from: relief.from, landing: relief.landing, hazard: relief.hazard,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [relief?.option, relief?.landing, relief?.from, relief?.hazard, holeNum, round?.tee]);
+
   // Route map taps based on mode: in pending mode they set the landing
   // position (and drop any hand-picked lie so detection follows the new
   // spot); otherwise they set the aim target.
   const onTargetChange = useCallback((t: { x: number; y: number } | null) => {
+    if (relief) {
+      // While choosing a drop, taps place the ball inside the allowed area.
+      if (t && reliefPlan && relief.option !== "rehit") {
+        const spot = reliefPlan.snap(t);
+        setRelief((r) => (r ? { ...r, spot } : r));
+      }
+      return;
+    }
     if (pending) { setLanding(t); setLieOverride(null); }
     else         setTarget(t);
-  }, [pending]);
+  }, [pending, relief, reliefPlan]);
 
   if (!hole || !round) {
     return (
@@ -146,7 +181,7 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
   }
 
   const yardage        = hole.tees[round.tee];
-  const remainingYards = lastShot ? lastShot.remainingYards : yardage;
+  const remainingYards = lastShot ? (lastShot.relief?.remainingYards ?? lastShot.remainingYards) : yardage;
   const onGreen        = currentLie === "green";
 
   // Straight-line yards between two map points, scaled so the selected tee →
@@ -174,6 +209,7 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
   const chosenLie: LieType | null = lieOverride ?? detectedLie;
 
   const holeDone = holeScore?.completed === true;
+  const penaltyCount = shots.reduce((n, sh) => n + (sh.penaltyStrokes ?? 0), 0);
   const readyForPutts = onGreen && !holeDone;
 
   const completedHoles = round.holes.filter((h) => h.completed);
@@ -226,12 +262,72 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
       landing: finalSpot && toPin !== null ? finalSpot : undefined,
       remainingOverride: toPin ?? undefined,
     });
+    // In the water or out of bounds: don't record yet — the player picks how
+    // to continue (re-hit or drop) and the penalty is added then.
+    if ((resultLie === "water" || resultLie === "ob") && finalSpot && hasGeometry(holeNum)) {
+      setRelief({
+        draft: shot,
+        hazard: resultLie,
+        from: currentPos,
+        fromLie: currentLie,
+        fromRemaining: remainingYards,
+        landing: finalSpot,
+        pendingBefore: pending,
+        option: null,
+        spot: null,
+      });
+      setPending(null);
+      setLieOverride(null);
+      return;
+    }
     addShot(shot);
     setTarget(null);
     setLanding(null);
     setClubId("");
     setPending(null);
     setLieOverride(null);
+  }
+
+  function chooseRelief(option: ReliefOption) {
+    if (!relief || !round) return;
+    if (option === "rehit") { commitRelief(option, relief.from); return; }
+    const plan = planRelief({
+      hole: holeNum, tee: round.tee, option,
+      from: relief.from, landing: relief.landing, hazard: relief.hazard,
+    });
+    setRelief({ ...relief, option, spot: plan.defaultSpot });
+  }
+
+  function commitRelief(option: ReliefOption, spot: { x: number; y: number }) {
+    if (!relief || !round) return;
+    const penalty = RELIEF_PENALTY[option];
+    const rehit = option === "rehit";
+    const lie: LieType = rehit ? relief.fromLie : lieAtDrop(holeNum, spot);
+    const left = rehit
+      ? relief.fromRemaining
+      : Math.round(yardsToPin(holeNum, round.tee, spot) ?? relief.draft.remainingYards);
+    // Strokes gained against where play actually continues, minus the penalty.
+    const sg = strokesGained(relief.fromLie, relief.fromRemaining, lie, left, false, hole!.par as 3 | 4 | 5) - penalty;
+    addShot({
+      ...relief.draft,
+      penaltyStrokes: penalty,
+      strokesGained: Math.round(sg * 100) / 100,
+      relief: { option, posX: spot.x, posY: spot.y, lie, remainingYards: left },
+    });
+    setRelief(null);
+    setTarget(null);
+    setLanding(null);
+    setClubId("");
+  }
+
+  function backFromRelief() {
+    if (!relief) return;
+    if (relief.option) { setRelief({ ...relief, option: null, spot: null }); return; }
+    // Not actually in the hazard: go back to the lie picker.
+    setPending(relief.pendingBefore);
+    setLanding(relief.landing);
+    setLieOverride(null);
+    setRelief(null);
   }
 
   function cancelPending() {
@@ -261,8 +357,9 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
 
   // -------- Bottom-card mode selector --------
   // Mode: completed | pending | putts | input
-  const mode: "completed" | "pending" | "putts" | "input" =
+  const mode: "completed" | "relief" | "pending" | "putts" | "input" =
     holeDone ? "completed"
+    : relief ? "relief"
     : pending ? "pending"
     : readyForPutts ? "putts"
     : "input";
@@ -281,7 +378,6 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
           <span className="font-bold text-sm">Hole {holeNum}</span>
         </div>
         <div className="flex items-center gap-2">
-          <ThemeToggle />
           <button
             onClick={() => setShowEndConfirm(true)}
             className="text-danger hover:opacity-80 text-xs border border-app rounded px-2 py-1"
@@ -319,7 +415,9 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
             currentPos={currentPos}
             teePos={teeStart}
             target={target}
-            landing={pending ? landing : null}
+            landing={pending ? landing : relief ? relief.landing : null}
+            dropZone={reliefPlan?.zone ?? null}
+            dropSpot={relief?.option && relief.option !== "rehit" ? relief.spot : null}
             onTargetChange={onTargetChange}
             targetDistanceYards={targetDist}
             landingDistanceYards={landingDist}
@@ -367,6 +465,7 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
                     </p>
                     <p className="text-muted text-xs">
                       {holeScore!.strokes} strokes · {shots.length} shot{shots.length === 1 ? "" : "s"} + {holeScore!.putts} putt{holeScore!.putts === 1 ? "" : "s"}
+                      {penaltyCount > 0 && <> + {penaltyCount} penalty</>}
                     </p>
                   </div>
                   <button onClick={handleReopenHole} className="text-link text-xs underline font-semibold">
@@ -387,6 +486,67 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
                   >
                     Finish Round
                   </button>
+                )}
+              </div>
+            )}
+
+            {mode === "relief" && relief && (
+              <div className="space-y-2">
+                <div className="flex items-baseline justify-between gap-2">
+                  <p className="text-app font-bold text-sm">
+                    {relief.hazard === "water" ? "In the water" : "Out of bounds"}
+                  </p>
+                  <span className="text-danger text-xs font-bold">Penalty</span>
+                </div>
+                {relief.option === null ? (
+                  <>
+                    <div className="space-y-1.5">
+                      {reliefOptionsFor(relief.hazard).map((opt) => (
+                        <button
+                          key={opt}
+                          onClick={() => chooseRelief(opt)}
+                          className="w-full min-h-12 flex items-center gap-3 rounded-xl border-2 border-line-strong bg-card px-3 py-2 text-left hover:border-primary"
+                        >
+                          <span className="flex-1 min-w-0">
+                            <span className="block font-bold text-sm text-app">{RELIEF_LABELS[opt].title}</span>
+                            <span className="block text-[11px] text-muted leading-snug">{RELIEF_LABELS[opt].detail}</span>
+                          </span>
+                          <span className="shrink-0 rounded-md bg-accent px-2 py-1 text-xs font-bold text-danger">
+                            +{RELIEF_PENALTY[opt]}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                    <button onClick={backFromRelief} className="text-muted hover:text-app text-xs underline font-semibold">
+                      Not {relief.hazard === "water" ? "in the water" : "out of bounds"}? Change the lie
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-muted text-xs">
+                      {relief.option === "back-on-line"
+                        ? "Tap anywhere on the dashed line to choose your drop."
+                        : relief.option === "lateral"
+                          ? "Tap inside the circle to choose your drop."
+                          : "Tap along the dashed line to choose your drop."}
+                      {" "}You can&apos;t drop nearer the hole or in the hazard.
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={backFromRelief}
+                        className="px-3 min-h-12 rounded-xl bg-accent text-subtle border border-app text-xs font-semibold"
+                      >
+                        Back
+                      </button>
+                      <button
+                        onClick={() => relief.spot && commitRelief(relief.option!, relief.spot)}
+                        disabled={!relief.spot}
+                        className="flex-1 min-h-12 rounded-xl bg-primary hover:bg-primary-hover disabled:opacity-40 text-on-primary font-bold text-base"
+                      >
+                        Drop here · +{RELIEF_PENALTY[relief.option]}
+                      </button>
+                    </div>
+                  </>
                 )}
               </div>
             )}

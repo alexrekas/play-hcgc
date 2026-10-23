@@ -6,9 +6,8 @@ import { signOut } from "firebase/auth";
 import { getFirebaseAuth } from "@/lib/firebase";
 import { useAuth } from "@/lib/authContext";
 import { useProfile } from "@/lib/profileContext";
-import ThemeToggle from "@/components/ThemeToggle";
 import AuthForm, { type AuthMode } from "@/components/AuthForm";
-import SiteFooter, { UNOFFICIAL_NOTE } from "@/components/SiteFooter";
+import SiteFooter from "@/components/SiteFooter";
 import type { HandicapRecord } from "@/types";
 import { getHandicapRecord } from "@/lib/firestore";
 import { COURSE, TEE_LABELS } from "@/data/course";
@@ -44,11 +43,8 @@ export default function LandingPage() {
 
   return (
     <main className="min-h-screen bg-app flex flex-col">
-      <header className="px-4 py-3 flex justify-end">
-        <ThemeToggle />
-      </header>
 
-      <div className="flex-1 flex flex-col items-center justify-center px-4 pt-2">
+      <div className="flex-1 flex flex-col items-center justify-center px-4 pt-10">
         <div className="text-center mb-6">
           <div className="inline-flex items-center gap-3 mb-3">
             <span className="text-5xl">⛳</span>
@@ -60,7 +56,6 @@ export default function LandingPage() {
           <p className="text-muted mt-4 max-w-sm mx-auto leading-relaxed">
             Turn a range session into a round at Herndon Centennial — aim on the hole map, hit the shot, mark where it landed.
           </p>
-          <p className="text-subtle text-[11px] mt-2 max-w-xs mx-auto leading-snug">{UNOFFICIAL_NOTE}</p>
         </div>
 
         <div className="w-full max-w-sm space-y-4">

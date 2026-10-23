@@ -10,7 +10,6 @@ import { calcDifferential, calculateHandicapIndex, courseHandicap } from "@/lib/
 import { getClubById } from "@/data/clubs";
 import type { HandicapRecord, HoleScore } from "@/types";
 import SiteFooter from "@/components/SiteFooter";
-import ThemeToggle from "@/components/ThemeToggle";
 import { toParClass, sgClass } from "@/lib/scoring";
 import AuthForm, { type AuthMode } from "@/components/AuthForm";
 import { getFirebaseAuth } from "@/lib/firebase";
@@ -108,7 +107,6 @@ export default function ResultsPage() {
           <h1 className="text-2xl font-bold">Round Complete</h1>
           <p className="text-subtle text-sm">{COURSE.name}</p>
         </div>
-        <ThemeToggle />
       </div>
 
       <div className="max-w-md mx-auto px-4 mt-8 space-y-6">
@@ -206,12 +204,15 @@ export default function ResultsPage() {
                             return (
                               <div key={i} className="grid grid-cols-6 gap-1 text-app">
                                 <span className="text-subtle">{i + 1}</span>
-                                <span className="font-semibold">{club?.shortName ?? "?"}</span>
+                                <span className="font-semibold">
+                                  {club?.shortName ?? "?"}
+                                  {s.penaltyStrokes ? <span className="text-danger"> +{s.penaltyStrokes}</span> : null}
+                                </span>
                                 <span>{s.distanceYards}y</span>
                                 <span className="text-subtle">
                                   {s.offlineYards === 0 ? "—" : `${Math.abs(s.offlineYards)}y ${s.offlineYards > 0 ? "R" : "L"}`}
                                 </span>
-                                <span>{s.remainingYards}y</span>
+                                <span>{s.relief?.remainingYards ?? s.remainingYards}y</span>
                                 <span className={`text-right font-mono ${sgClass(s.strokesGained)}`}>
                                   {s.strokesGained > 0 ? "+" : ""}{s.strokesGained.toFixed(2)}
                                 </span>

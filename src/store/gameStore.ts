@@ -22,7 +22,8 @@ interface GameState {
 }
 
 function recalcHoleStrokes(h: HoleScore): HoleScore {
-  const strokes = h.shots.length + h.putts;
+  const penalties = h.shots.reduce((n, s) => n + (s.penaltyStrokes ?? 0), 0);
+  const strokes = h.shots.length + h.putts + penalties;
   return { ...h, strokes };
 }
 
