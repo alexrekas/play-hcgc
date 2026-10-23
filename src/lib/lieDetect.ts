@@ -54,3 +54,23 @@ export function isTeeBox(hole: number, pos: { x: number; y: number }): boolean {
   const gy = Math.min(LIE_GRID_H - 1, Math.max(0, Math.floor((1 - pos.y) * LIE_GRID_H)));
   return g[gy * LIE_GRID_W + gx] === "t";
 }
+
+const centers = new Map<number, { x: number; y: number } | null>();
+
+/** Middle of the putting green (average of its grid cells), in engine coords. */
+export function greenCenter(hole: number): { x: number; y: number } | null {
+  if (centers.has(hole)) return centers.get(hole)!;
+  const g = grid(hole);
+  let sx = 0, sy = 0, n = 0;
+  if (g) {
+    for (let i = 0; i < g.length; i++) {
+      if (g[i] !== "g") continue;
+      sx += (i % LIE_GRID_W) + 0.5;
+      sy += Math.floor(i / LIE_GRID_W) + 0.5;
+      n++;
+    }
+  }
+  const c = n ? { x: sx / n / LIE_GRID_W, y: 1 - sy / n / LIE_GRID_H } : null;
+  centers.set(hole, c);
+  return c;
+}

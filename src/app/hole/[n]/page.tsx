@@ -15,6 +15,7 @@ import { detectLie } from "@/lib/lieDetect";
 import { teePosition, yardsBetween, yardsToPin, aimAngleDeg as aimBetween, hasGeometry } from "@/lib/holeGeometry";
 import { planRelief, lieAtDrop, reliefOptionsFor, RELIEF_LABELS, RELIEF_PENALTY } from "@/lib/relief";
 import { strokesGained } from "@/lib/strokesGained";
+import { autoAim } from "@/lib/autoAim";
 
 const LIE_LABELS: Record<LieType, string> = {
   tee: "Tee Box",
@@ -193,15 +194,23 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
     return { aimAngleDeg: aimBetween(from, to), distanceYards: yards };
   }
 
-  // Distance / aim derived from the current tap target.
-  const computed = target ? shotBetween(currentPos, target) : null;
-  const targetDist = computed ? Math.round(computed.distanceYards) : null;
-  // Distance to the landing marker (live in the lie-picker phase).
-  const landingDist = landing ? Math.round(shotBetween(currentPos, landing).distanceYards) : null;
-
   const suggestedClub = suggestClub(remainingYards, gender, onGreen, bag, clubAverages);
   const selectedClubId = clubId || suggestedClub.id;
   const selectedClub   = getClubById(selectedClubId) ?? suggestedClub;
+
+  // Default aim until the player taps the map: center of the green within
+  // 200 yards, otherwise the middle of the fairway at this club's distance.
+  const canAutoAim = !target && !pending && !relief && !onGreen && holeScore?.completed !== true;
+  const auto = canAutoAim
+    ? autoAim(holeNum, round.tee, currentPos, remainingYards, effectiveAvgYards(selectedClub, gender, clubAverages))
+    : null;
+  const aimTarget = target ?? auto?.point ?? null;
+
+  // Distance / aim derived from the aim target (tapped or default).
+  const computed = aimTarget ? shotBetween(currentPos, aimTarget) : null;
+  const targetDist = computed ? Math.round(computed.distanceYards) : null;
+  // Distance to the landing marker (live in the lie-picker phase).
+  const landingDist = landing ? Math.round(shotBetween(currentPos, landing).distanceYards) : null;
 
   // Lie under the landing marker, read from the hole artwork. Pre-selects the
   // lie button; the player confirms or changes it.
@@ -222,7 +231,9 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
   const bagClubs = bag.length > 0 ? CLUBS.filter((c) => bag.includes(c.id)) : CLUBS;
 
   function stageShot() {
-    if (!computed || computed.distanceYards <= 0 || !target) return;
+    if (!computed || computed.distanceYards <= 0 || !aimTarget) return;
+    // Freeze the aim (it may have been the default) so the map keeps showing it.
+    setTarget(aimTarget);
     setPending({
       clubId: selectedClubId,
       distance: computed.distanceYards,
@@ -230,7 +241,7 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
     });
     // Default the landing marker to the aim target; the player can drag it
     // to refine where the ball actually came down.
-    setLanding(target);
+    setLanding(aimTarget);
     setLieOverride(null);
   }
 
@@ -418,7 +429,7 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
             shots={shots}
             currentPos={currentPos}
             teePos={teeStart}
-            target={target}
+            target={aimTarget}
             landing={pending ? landing : relief ? relief.landing : null}
             dropZone={reliefPlan?.zone ?? null}
             dropSpot={relief?.option && relief.option !== "rehit" ? relief.spot : null}
@@ -659,11 +670,15 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
 
             {mode === "input" && (
               <div className="space-y-2">
-                {!target && (
-                  <p className="text-app text-xs text-center font-bold">
-                    Tap the map to set your target — distance updates live.
-                  </p>
-                )}
+                <p className="text-app text-xs text-center font-bold">
+                  {target
+                    ? "Aiming where you tapped — tap again to adjust."
+                    : auto?.kind === "green"
+                      ? "Aimed at the center of the green — tap the map to change."
+                      : auto?.kind === "fairway"
+                        ? "Aimed at the middle of the fairway — tap the map to change."
+                        : "Tap the map to set your target — distance updates live."}
+                </p>
                 {/* Club chip + distance row */}
                 <div className="flex items-center gap-2">
                   <button
@@ -731,7 +746,7 @@ export default function HolePage({ params }: { params: Promise<{ n: string }> })
                 <div className="flex gap-2">
                   <button
                     onClick={stageShot}
-                    disabled={!target || (targetDist ?? 0) <= 0}
+                    disabled={!aimTarget || (targetDist ?? 0) <= 0}
                     className="flex-1 py-3 rounded-xl bg-primary hover:bg-primary-hover disabled:opacity-40 text-on-primary font-bold text-base"
                   >
                     Hit Shot
