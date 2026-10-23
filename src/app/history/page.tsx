@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/authContext";
 import { useProfile } from "@/lib/profileContext";
 import { getUserRounds, getHandicapRecord } from "@/lib/firestore";
-import { COURSE, TEE_LABELS, type TeeName, PLAYABLE_TEES } from "@/data/course";
+import { COURSE, TEE_LABELS, type TeeName, PLAYABLE_TEES, DEFAULT_TEE } from "@/data/course";
 import { courseHandicap } from "@/lib/handicap";
 import type { Round, HandicapRecord } from "@/types";
 import SiteFooter from "@/components/SiteFooter";
@@ -18,7 +18,7 @@ export default function HistoryPage() {
   const [rounds,     setRounds]     = useState<Round[]>([]);
   const [hcpRecord,  setHcpRecord]  = useState<HandicapRecord | null>(null);
   const [fetching,   setFetching]   = useState(true);
-  const [teeForCH,   setTeeForCH]   = useState<TeeName>("white");
+  const [teeForCH,   setTeeForCH]   = useState<TeeName>(DEFAULT_TEE);
 
   useEffect(() => {
     if (!user) return;

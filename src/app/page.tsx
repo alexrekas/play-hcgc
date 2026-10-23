@@ -10,7 +10,7 @@ import AuthForm, { type AuthMode } from "@/components/AuthForm";
 import SiteFooter from "@/components/SiteFooter";
 import type { HandicapRecord } from "@/types";
 import { getHandicapRecord } from "@/lib/firestore";
-import { COURSE, TEE_LABELS } from "@/data/course";
+import { COURSE, TEE_LABELS, DEFAULT_TEE } from "@/data/course";
 import { courseHandicap } from "@/lib/handicap";
 
 export default function LandingPage() {
@@ -68,7 +68,7 @@ export default function LandingPage() {
                   <p className="text-subtle text-xs mt-0.5 capitalize">{profile.gender}</p>
                 )}
                 {hcpRecord?.handicapIndex !== null && hcpRecord?.handicapIndex !== undefined && (() => {
-                  const tee = COURSE.teeInfo.white;
+                  const tee = COURSE.teeInfo[DEFAULT_TEE];
                   const ch  = courseHandicap(hcpRecord.handicapIndex!, tee.slope, tee.rating, COURSE.par);
                   return (
                     <div className="mt-3 pt-3 border-t border-app flex justify-around text-center">
@@ -78,7 +78,7 @@ export default function LandingPage() {
                       </div>
                       <div>
                         <p className="text-subtle text-[10px] uppercase tracking-wider">
-                          Course Hcp ({TEE_LABELS.white})
+                          Course Hcp ({TEE_LABELS[DEFAULT_TEE]})
                         </p>
                         <p className="font-bold text-xl text-app">{ch}</p>
                       </div>

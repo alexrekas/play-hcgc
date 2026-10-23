@@ -5,6 +5,9 @@ export type TeeName = "diamond" | "black" | "blue" | "white";
 // display and count toward the handicap.
 export const PLAYABLE_TEES: TeeName[] = ["black", "blue", "white"];
 
+// Tee selected by default on Course Setup and for course-handicap figures.
+export const DEFAULT_TEE: TeeName = "blue";
+
 export interface TeeData {
   yards: number;
   rating: number;

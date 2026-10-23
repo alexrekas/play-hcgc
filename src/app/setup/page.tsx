@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useGameStore } from "@/store/gameStore";
 import { useAuth } from "@/lib/authContext";
 import { useProfile } from "@/lib/profileContext";
-import { COURSE, TEE_COLORS, TEE_LABELS, type TeeName, PLAYABLE_TEES } from "@/data/course";
+import { COURSE, TEE_COLORS, TEE_LABELS, type TeeName, PLAYABLE_TEES, DEFAULT_TEE } from "@/data/course";
 import SiteFooter from "@/components/SiteFooter";
 
 export default function SetupPage() {
@@ -13,7 +13,7 @@ export default function SetupPage() {
   const { user } = useAuth();
   const { profile } = useProfile();
   const { startRound } = useGameStore();
-  const [selectedTee, setSelectedTee] = useState<TeeName>("white");
+  const [selectedTee, setSelectedTee] = useState<TeeName>(DEFAULT_TEE);
   const [showCard,    setShowCard]    = useState(false);
 
   function begin() {

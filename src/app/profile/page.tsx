@@ -19,7 +19,7 @@ import {
   type Gender,
 } from "@/data/clubs";
 import { getUserRounds, getHandicapRecord } from "@/lib/firestore";
-import { COURSE, TEE_LABELS, type TeeName, PLAYABLE_TEES } from "@/data/course";
+import { COURSE, TEE_LABELS, type TeeName, PLAYABLE_TEES, DEFAULT_TEE } from "@/data/course";
 import { courseHandicap } from "@/lib/handicap";
 import type { HandicapRecord, Round, Dexterity } from "@/types";
 import { clubStatsFromRounds, buildClubAverages } from "@/lib/clubStats";
@@ -53,7 +53,7 @@ export default function ProfilePage() {
   const [hcpRecord,   setHcpRecord]   = useState<HandicapRecord | null>(null);
   const [fetchingHistory, setFetchingHistory] = useState(true);
 
-  const [teeForCH,    setTeeForCH]    = useState<TeeName>("white");
+  const [teeForCH,    setTeeForCH]    = useState<TeeName>(DEFAULT_TEE);
   const [editingClub, setEditingClub] = useState<string | null>(null);
   const [editDraft,   setEditDraft]   = useState("");
 
