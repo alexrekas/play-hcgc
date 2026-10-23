@@ -1,5 +1,10 @@
 export type TeeName = "diamond" | "black" | "blue" | "white";
 
+// Tees a player can choose. Diamond (a made-up tips set) was retired; it stays
+// in TeeName and the course data only so rounds already saved from it still
+// display and count toward the handicap.
+export const PLAYABLE_TEES: TeeName[] = ["black", "blue", "white"];
+
 export interface TeeData {
   yards: number;
   rating: number;

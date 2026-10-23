@@ -5,10 +5,8 @@ import { useRouter } from "next/navigation";
 import { useGameStore } from "@/store/gameStore";
 import { useAuth } from "@/lib/authContext";
 import { useProfile } from "@/lib/profileContext";
-import { COURSE, TEE_COLORS, TEE_LABELS, type TeeName } from "@/data/course";
+import { COURSE, TEE_COLORS, TEE_LABELS, type TeeName, PLAYABLE_TEES } from "@/data/course";
 import SiteFooter from "@/components/SiteFooter";
-
-const TEE_NAMES: TeeName[] = ["diamond", "black", "blue", "white"];
 
 export default function SetupPage() {
   const router = useRouter();
@@ -51,8 +49,8 @@ export default function SetupPage() {
           <h2 className="text-subtle font-semibold text-sm uppercase tracking-wider mb-3">
             Choose Your Tee Box
           </h2>
-          <div className="grid grid-cols-2 gap-3">
-            {TEE_NAMES.map((tee) => {
+          <div className="grid grid-cols-3 gap-2">
+            {PLAYABLE_TEES.map((tee) => {
               const info = COURSE.teeInfo[tee];
               const active = tee === selectedTee;
               return (
@@ -60,7 +58,7 @@ export default function SetupPage() {
                   key={tee}
                   onClick={() => setSelectedTee(tee)}
                   aria-pressed={active}
-                  className={`rounded-xl p-4 border-2 text-left transition-all ${
+                  className={`rounded-xl p-3 border-2 text-left transition-all ${
                     active
                       ? "border-primary bg-primary-soft"
                       : "border-app bg-card hover:border-primary"
@@ -74,8 +72,8 @@ export default function SetupPage() {
                     <span className="font-bold text-app">{TEE_LABELS[tee]}</span>
                   </div>
                   <p className="text-muted text-sm">{info.yards.toLocaleString()} yds</p>
-                  <p className="text-subtle text-xs">
-                    Rating {info.rating} / Slope {info.slope}
+                  <p className="text-subtle text-xs leading-snug">
+                    Rating {info.rating}<br />Slope {info.slope}
                   </p>
                 </button>
               );

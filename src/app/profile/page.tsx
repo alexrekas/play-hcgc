@@ -19,7 +19,7 @@ import {
   type Gender,
 } from "@/data/clubs";
 import { getUserRounds, getHandicapRecord } from "@/lib/firestore";
-import { COURSE, TEE_LABELS, type TeeName } from "@/data/course";
+import { COURSE, TEE_LABELS, type TeeName, PLAYABLE_TEES } from "@/data/course";
 import { courseHandicap } from "@/lib/handicap";
 import type { HandicapRecord, Round, Dexterity } from "@/types";
 import { clubStatsFromRounds, buildClubAverages } from "@/lib/clubStats";
@@ -34,8 +34,6 @@ const CATEGORY_LABELS: Record<ClubCategory, string> = {
   wedge:  "Wedges",
   putter: "Putter",
 };
-
-const TEE_NAMES: TeeName[] = ["diamond", "black", "blue", "white"];
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -338,7 +336,7 @@ export default function ProfilePage() {
               <div className="flex-1">
                 <p className="text-subtle text-xs uppercase tracking-wider">Course Handicap at HCGC</p>
                 <div className="flex flex-wrap gap-1 my-1">
-                  {TEE_NAMES.map((t) => (
+                  {PLAYABLE_TEES.map((t) => (
                     <button
                       key={t}
                       onClick={() => setTeeForCH(t)}

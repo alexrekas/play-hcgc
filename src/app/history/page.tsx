@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/authContext";
 import { useProfile } from "@/lib/profileContext";
 import { getUserRounds, getHandicapRecord } from "@/lib/firestore";
-import { COURSE, TEE_LABELS, type TeeName } from "@/data/course";
+import { COURSE, TEE_LABELS, type TeeName, PLAYABLE_TEES } from "@/data/course";
 import { courseHandicap } from "@/lib/handicap";
 import type { Round, HandicapRecord } from "@/types";
 import SiteFooter from "@/components/SiteFooter";
@@ -83,8 +83,6 @@ export default function HistoryPage() {
     ? courseHandicap(index, teeInfo.slope, teeInfo.rating, COURSE.par)
     : null;
 
-  const TEE_NAMES: TeeName[] = ["diamond", "black", "blue", "white"];
-
   return (
     <main className="min-h-screen bg-app text-app pb-12">
       <div className="bg-card border-b border-app px-4 py-4 flex items-center justify-between gap-3">
@@ -110,7 +108,7 @@ export default function HistoryPage() {
               <div className="mt-4">
                 <p className="text-subtle text-xs uppercase tracking-wider mb-2">Course Handicap at HCGC</p>
                 <div className="flex gap-1 justify-center mb-2">
-                  {TEE_NAMES.map((t) => (
+                  {PLAYABLE_TEES.map((t) => (
                     <button
                       key={t}
                       onClick={() => setTeeForCH(t)}

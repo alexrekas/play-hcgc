@@ -72,7 +72,7 @@ Querying `rounds` requires the composite index in `firestore.indexes.json` (user
 
 ### Course data
 
-`data/course.ts` is the single source of truth for hole pars, yardages, ratings, slopes. Tee names: `"diamond" | "black" | "blue" | "white"` (red tees were removed — don't reintroduce them anywhere). All UI tee pickers iterate over `TEE_NAMES` arrays that must stay in sync with `TeeName`.
+`data/course.ts` is the single source of truth for hole pars, yardages, ratings, slopes. Tee names: `"diamond" | "black" | "blue" | "white"` (red tees were removed — don't reintroduce them anywhere). Diamond is retired: it stays in `TeeName` and the course data only so previously saved Diamond rounds still display and count toward the handicap. All UI tee pickers iterate over `PLAYABLE_TEES` (black, blue, white) from `data/course.ts`.
 
 ## Things easy to get wrong
 
